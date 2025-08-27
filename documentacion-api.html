@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroCursos API - Documentación Completa</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f7fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background-color: #28a745; }
+        .post { background-color: #007bff; }
+        .put { background-color: #ffc107; color: #212529; }
+        .delete { background-color: #dc3545; }
+        .patch { background-color: #6c757d; }
+
+        .curl-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .response-example {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .auth-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #e9ecef;
+            color: #495057;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 2px;
+        }
+        .toc {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 8px 0;
+        }
+        .toc a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        h2 { color: #34495e; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h3 { color: #7f8c8d; }
+        code { background: #f1f2f6; padding: 2px 4px; border-radius: 3px; }
+        .status-code {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .status-200 { background: #d4edda; color: #155724; }
+        .status-201 { background: #cce7ff; color: #004085; }
+        .status-400 { background: #f8d7da; color: #721c24; }
+        .status-401 { background: #f5c6cb; color: #721c24; }
+        .status-403 { background: #f5c6cb; color: #721c24; }
+        .status-404 { background: #f8d7da; color: #721c24; }
+        .status-500 { background: #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🌱 AgroCursos API</h1>
+    <p>Documentación completa de endpoints para la plataforma educativa del sector agrícola</p>
+    <p><strong>Base URL:</strong> http://localhost:3010</p>
+</div>
+
+<div class="toc section">
+    <h2>📑 Índice</h2>
+    <ul>
+        <li><a href="#auth">🔐 Autenticación</a></li>
+        <li><a href="#courses">📚 Cursos</a></li>
+        <li><a href="#modules">📖 Módulos</a></li>
+        <li><a href="#classes">🎥 Clases</a></li>
+        <li><a href="#assignments">📝 Asignaciones/Exámenes</a></li>
+        <li><a href="#enrollments">👥 Inscripciones</a></li>
+        <li><a href="#progress">📊 Progreso</a></li>
+        <li><a href="#certificates">🏆 Certificados</a></li>
+        <li><a href="#virtual-classes">💻 Clases Virtuales</a></li>
+        <li><a href="#health">🔧 Health Check</a></li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>🚀 Primeros Pasos</h2>
+    <p>Para probar la API, primero necesitas:</p>
+    <ol>
+        <li><strong>Registrar un usuario:</strong> Usa el endpoint <code>POST /api/auth/register</code></li>
+        <li><strong>Hacer login:</strong> Usa el endpoint <code>POST /api/auth/login</code> para obtener el token</li>
+        <li><strong>Incluir el token:</strong> En cada request protegido, incluye el header: <code>Authorization: Bearer {token}</code></li>
+    </ol>
+
+    <div class="auth-note">
+        <strong>Roles disponibles:</strong>
+        <span class="role-badge">student</span>
+        <span class="role-badge">instructor</span>
+        <span class="role-badge">admin</span>
+    </div>
+</div>
+
+<!-- AUTHENTICATION -->
+<div class="section" id="auth">
+    <h2>🔐 Autenticación</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/auth/register</strong>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Registrar nuevo usuario</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{
+            "email": "instructor@example.com",
+            "password": "123456",
+            "first_name": "Juan",
+            "last_name": "Pérez",
+            "phone": "+1234567890",
+            "role": "instructor"
+            }'
+        </div>
+
+        <div class="response-example">
+            {
+            "success": true,
+            "message": "Usuario registrado exitosamente",
+            "user": {
+            "id": "uuid",
+            "email": "instructor@example.com",
+            "first_name": "Juan",
+            "last_name": "Pérez",
+            "role": "instructor",
+            "created_at": "2025-01-19T00:00:00.000Z"
+            },
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/auth/login</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Iniciar sesión</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{
+            "email": "instructor@example.com",
+            "password": "123456"
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/auth/profile</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener perfil del usuario</p>
+
+        <div class="curl-example">
+            curl -X GET http://localhost:3010/api/auth/profile \
+            -H "Authorization: Bearer {token}"
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method patch">PATCH</span>
+            <strong>/api/auth/make-admin/:email</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Promocionar usuario a administrador</p>
+
+        <div class="curl-example">
+            curl -X PATCH http://localhost:3010/api/auth/make-admin/usuario@example.com
+        </div>
+    </div>
+</div>
+
+<!-- COURSES -->
+<div class="section" id="courses">
+    <h2>📚 Cursos</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Listar cursos con filtros y paginación</p>
+
+        <div class="curl-example">
+            curl -X GET "http://localhost:3010/api/courses?page=1&limit=10&category=Agricultura&level=beginner"
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:id</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener curso específico</p>
+
+        <div class="curl-example">
+            curl -X GET http://localhost:3010/api/courses/{courseId}
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/courses</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Crear nuevo curso</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/courses \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "title": "Agricultura Orgánica Avanzada",
+            "description": "Técnicas avanzadas de cultivo orgánico y sostenible",
+            "category": "Agricultura",
+            "difficulty_level": "intermediate",
+            "price": 150.00,
+            "duration_hours": 40,
+            "is_published": true
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/courses/:id</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Actualizar curso (solo el instructor propietario)</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method delete">DELETE</span>
+            <strong>/api/courses/:id</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Eliminar curso (marcado como no publicado)</p>
+    </div>
+</div>
+
+<!-- MODULES -->
+<div class="section" id="modules">
+    <h2>📖 Módulos</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:courseId/modules</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener módulos de un curso</p>
+
+        <div class="curl-example">
+            curl -X GET http://localhost:3010/api/courses/{courseId}/modules
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/modules/:id</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener módulo específico con sus clases</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/courses/:courseId/modules</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Crear módulo en un curso</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/courses/{courseId}/modules \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "title": "Introducción a la Agricultura Orgánica",
+            "description": "Conceptos básicos y principios fundamentales",
+            "order_sequence": 1,
+            "is_published": true
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/modules/:id</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Actualizar módulo</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method delete">DELETE</span>
+            <strong>/api/modules/:id</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Eliminar módulo (debe estar vacío de clases)</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/courses/:courseId/modules/reorder</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Reordenar módulos</p>
+
+        <div class="curl-example">
+            curl -X PUT http://localhost:3010/api/courses/{courseId}/modules/reorder \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "moduleOrders": [
+            {"id": "module-uuid-1", "order_sequence": 1},
+            {"id": "module-uuid-2", "order_sequence": 2}
+            ]
+            }'
+        </div>
+    </div>
+</div>
+
+<!-- CLASSES -->
+<div class="section" id="classes">
+    <h2>🎥 Clases</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/modules/:moduleId/classes</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener clases de un módulo</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/classes/:id</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener clase específica</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/modules/:moduleId/classes</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Crear clase en un módulo</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/modules/{moduleId}/classes \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "title": "Preparación del Suelo",
+            "description": "Técnicas de preparación y acondicionamiento del suelo",
+            "content_type": "youtube",
+            "content_url": "https://youtube.com/watch?v=example",
+            "duration_minutes": 30,
+            "order_sequence": 1,
+            "resources": [
+            {"title": "Manual PDF", "url": "https://example.com/manual.pdf"},
+            {"title": "Presentación", "url": "https://example.com/slides.ppt"}
+            ],
+            "is_published": true
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/classes/:id/complete</strong>
+            <span class="role-badge">student</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Marcar clase como completada por el estudiante</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/classes/{classId}/complete \
+            -H "Authorization: Bearer {studentToken}"
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/classes/modules/:moduleId/classes/reorder</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Reordenar clases dentro de un módulo</p>
+    </div>
+</div>
+
+<!-- ASSIGNMENTS -->
+<div class="section" id="assignments">
+    <h2>📝 Asignaciones/Exámenes</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:courseId/assignments</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener asignaciones de un curso</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/assignments/:id</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener asignación específica (incluye intentos del estudiante)</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/courses/:courseId/assignments</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Crear asignación/examen</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/courses/{courseId}/assignments \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "title": "Examen: Principios de Agricultura Orgánica",
+            "description": "Evaluación de conocimientos sobre principios básicos",
+            "questions": [
+            {
+            "question": "¿Cuál es el principio fundamental de la agricultura orgánica?",
+            "type": "multiple_choice",
+            "options": ["Sostenibilidad", "Productividad", "Rentabilidad", "Velocidad"],
+            "correct_answer": 0
+            },
+            {
+            "question": "Explique los beneficios del compostaje",
+            "type": "essay"
+            }
+            ],
+            "max_attempts": 3,
+            "passing_score": 70,
+            "time_limit_minutes": 60,
+            "manual_approval_required": false,
+            "is_published": true
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/assignments/:id/attempt</strong>
+            <span class="role-badge">student</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Iniciar intento de examen</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/assignments/{assignmentId}/attempt \
+            -H "Authorization: Bearer {studentToken}"
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/assignments/attempts/:attemptId/submit</strong>
+            <span class="role-badge">student</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Enviar respuestas del examen</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/assignments/attempts/{attemptId}/submit \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {studentToken}" \
+            -d '{
+            "answers": [
+            0,
+            "El compostaje mejora la estructura del suelo, aporta nutrientes naturales..."
+            ]
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/assignments/:id/attempts</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Ver todos los intentos de una asignación (para calificar)</p>
+    </div>
+</div>
+
+<!-- ENROLLMENTS -->
+<div class="section" id="enrollments">
+    <h2>👥 Inscripciones</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/students/:studentId/enrollments</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener inscripciones de un estudiante</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:courseId/enrollments</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener inscripciones de un curso</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/courses/:courseId/enroll</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Inscribir estudiante en curso</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/courses/{courseId}/enroll \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "payment_status": "paid",
+            "payment_amount": 150.00,
+            "coupon_code": "DESCUENTO10",
+            "discount_applied": 15.00
+            }'
+        </div>
+
+        <p><strong>Para instructores/admins inscribiendo a otros:</strong></p>
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/courses/{courseId}/enroll \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {instructorToken}" \
+            -d '{
+            "student_email": "estudiante@example.com",
+            "payment_status": "free",
+            "payment_amount": 0.00
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/enrollments/bulk</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Inscripción masiva de estudiantes</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/enrollments/bulk \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "course_id": "course-uuid",
+            "student_emails": [
+            "estudiante1@example.com",
+            "estudiante2@example.com",
+            "estudiante3@example.com"
+            ],
+            "payment_status": "free",
+            "payment_amount": 0.00
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/enrollments/:id</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Actualizar inscripción</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method delete">DELETE</span>
+            <strong>/api/enrollments/:id</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Cancelar inscripción</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/enrollments/stats</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Estadísticas de inscripciones</p>
+
+        <div class="curl-example">
+            curl -X GET "http://localhost:3010/api/enrollments/stats?course_id={courseId}" \
+            -H "Authorization: Bearer {token}"
+        </div>
+    </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="section" id="progress">
+    <h2>📊 Progreso</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/students/:studentId/progress</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener progreso general de un estudiante</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:courseId/progress</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener progreso de todos los estudiantes en un curso</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/progress/:studentId/:courseId</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener progreso detallado de un estudiante en un curso específico</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/progress/:studentId/:courseId/update-time</strong>
+            <span class="role-badge">student</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Actualizar tiempo de estudio</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/progress/{studentId}/{courseId}/update-time \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {studentToken}" \
+            -d '{
+            "minutes_studied": 45
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/progress/dashboard/:studentId</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Dashboard completo del estudiante</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/progress/instructor-dashboard/:instructorId</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Dashboard del instructor</p>
+    </div>
+</div>
+
+<!-- CERTIFICATES -->
+<div class="section" id="certificates">
+    <h2>🏆 Certificados</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/students/:studentId/certificates</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener certificados de un estudiante</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:courseId/certificates</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener certificados emitidos para un curso</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/certificates/issue</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Emitir certificado a estudiante</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/certificates/issue \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "student_id": "student-uuid",
+            "course_id": "course-uuid",
+            "template_id": "template-uuid",
+            "expires_at": null
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/certificates/:certificateId/verify</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Verificar certificado (público - no requiere autenticación)</p>
+
+        <div class="curl-example">
+            curl -X GET http://localhost:3010/api/certificates/AGR-2025-ABC12345/verify
+        </div>
+
+        <div class="response-example">
+            {
+            "success": true,
+            "valid": true,
+            "certificate": {
+            "certificate_id": "AGR-2025-ABC12345",
+            "student_name": "María García",
+            "course_title": "Agricultura Orgánica Avanzada",
+            "course_category": "Agricultura",
+            "course_level": "intermediate",
+            "course_duration": 40,
+            "instructor_name": "Juan Pérez",
+            "issued_at": "2025-01-19T00:00:00.000Z",
+            "expires_at": null,
+            "status": "active"
+            }
+            }
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/certificates/:id/revoke</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Revocar certificado</p>
+
+        <div class="curl-example">
+            curl -X PUT http://localhost:3010/api/certificates/{certificateId}/revoke \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "reason": "Incumplimiento de requisitos"
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/certificates/templates</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener plantillas de certificados</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/certificates/templates</strong>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Crear plantilla de certificado</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/certificates/templates \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {adminToken}" \
+            -d '{
+            "name": "Certificado Agricultura Orgánica",
+            "description": "Plantilla para cursos de agricultura orgánica",
+            "template_config": {
+            "background_color": "#ffffff",
+            "text_color": "#333333",
+            "logo_url": "https://example.com/logo.png",
+            "signature_fields": ["instructor", "director"]
+            },
+            "category": "agricultura",
+            "is_default": false
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/certificates/stats</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Estadísticas de certificados</p>
+    </div>
+</div>
+
+<!-- VIRTUAL CLASSES -->
+<div class="section" id="virtual-classes">
+    <h2>💻 Clases Virtuales</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/courses/:courseId/virtual-classes</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener clases virtuales de un curso</p>
+
+        <div class="curl-example">
+            curl -X GET "http://localhost:3010/api/courses/{courseId}/virtual-classes?upcoming=true"
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/virtual-classes/:id</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener clase virtual específica</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/courses/:courseId/virtual-classes</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Crear clase virtual</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/courses/{courseId}/virtual-classes \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "title": "Sesión en Vivo: Técnicas de Compostaje",
+            "description": "Demostración práctica de técnicas de compostaje",
+            "meeting_url": "https://zoom.us/j/123456789",
+            "meeting_id": "123-456-789",
+            "meeting_password": "agricultura123",
+            "platform": "zoom",
+            "scheduled_at": "2025-01-25T15:00:00.000Z",
+            "duration_minutes": 90,
+            "timezone": "America/Mexico_City",
+            "max_participants": 50
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method put">PUT</span>
+            <strong>/api/virtual-classes/:id</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Actualizar clase virtual</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method delete">DELETE</span>
+            <strong>/api/virtual-classes/:id</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Cancelar clase virtual (marcada como inactiva)</p>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/virtual-classes/:id/register</strong>
+            <span class="role-badge">student</span>
+            <span class="status-code status-201">201</span>
+        </div>
+        <p>Registrarse para clase virtual</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/virtual-classes/{virtualClassId}/register \
+            -H "Authorization: Bearer {studentToken}"
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method post">POST</span>
+            <strong>/api/virtual-classes/:id/attendance</strong>
+            <span class="role-badge">instructor</span>
+            <span class="role-badge">admin</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Marcar asistencia de estudiantes</p>
+
+        <div class="curl-example">
+            curl -X POST http://localhost:3010/api/virtual-classes/{virtualClassId}/attendance \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer {token}" \
+            -d '{
+            "attendances": [
+            {
+            "student_id": "student-uuid-1",
+            "joined_at": "2025-01-25T15:05:00.000Z",
+            "left_at": "2025-01-25T16:30:00.000Z",
+            "attended": true
+            },
+            {
+            "student_id": "student-uuid-2",
+            "attended": false
+            }
+            ]
+            }'
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/students/:studentId/virtual-classes</strong>
+            <span class="role-badge">Protegido</span>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Obtener clases virtuales de un estudiante</p>
+    </div>
+</div>
+
+<!-- HEALTH CHECK -->
+<div class="section" id="health">
+    <h2>🔧 Health Check</h2>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/health</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Verificar estado de la API y base de datos</p>
+
+        <div class="curl-example">
+            curl -X GET http://localhost:3010/health
+        </div>
+
+        <div class="response-example">
+            {
+            "status": "OK",
+            "database": "Connected",
+            "timestamp": "2025-01-19T00:00:00.000Z",
+            "environment": "development",
+            "port": "3010"
+            }
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/test-db</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Prueba detallada de conexión a base de datos</p>
+
+        <div class="curl-example">
+            curl -X GET http://localhost:3010/test-db
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <div>
+            <span class="method get">GET</span>
+            <strong>/api/test</strong>
+            <span class="status-code status-200">200</span>
+        </div>
+        <p>Prueba simple de la API</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📋 Flujo de Pruebas Recomendado</h2>
+    <ol>
+        <li><strong>Health Check:</strong> Verificar que la API esté funcionando</li>
+        <li><strong>Registro de Usuarios:</strong> Crear instructor y estudiantes</li>
+        <li><strong>Login:</strong> Obtener tokens de autenticación</li>
+        <li><strong>Crear Curso:</strong> Como instructor, crear un curso</li>
+        <li><strong>Crear Módulos:</strong> Agregar módulos al curso</li>
+        <li><strong>Crear Clases:</strong> Agregar clases a los módulos</li>
+        <li><strong>Crear Asignaciones:</strong> Agregar exámenes al curso</li>
+        <li><strong>Inscripción:</strong> Inscribir estudiantes al curso</li>
+        <li><strong>Progreso:</strong> Marcar clases como completadas</li>
+        <li><strong>Exámenes:</strong> Realizar intentos de examen</li>
+        <li><strong>Certificados:</strong> Emitir y verificar certificados</li>
+        <li><strong>Clases Virtuales:</strong> Programar y gestionar sesiones en vivo</li>
+    </ol>
+</div>
+
+<div class="section">
+    <h2>⚠️ Notas Importantes</h2>
+    <div class="auth-note">
+        <ul>
+            <li><strong>Tokens:</strong> Todos los endpoints protegidos requieren el header <code>Authorization: Bearer {token}</code></li>
+            <li><strong>UUIDs:</strong> Los IDs en la base de datos son UUIDs, no números enteros</li>
+            <li><strong>Roles:</strong> Cada rol tiene permisos específicos - los estudiantes no pueden crear contenido</li>
+            <li><strong>Estado de Cursos:</strong> Los cursos deben estar publicados (<code>is_published: true</code>) para ser visibles públicamente</li>
+            <li><strong>Progreso:</strong> El progreso se calcula automáticamente basado en clases completadas</li>
+            <li><strong>Certificados:</strong> Solo se pueden emitir cuando el estudiante ha completado el curso al 100%</li>
+            <li><strong>Error Codes:</strong> La API retorna códigos HTTP estándar con mensajes descriptivos en español</li>
+        </ul>
+    </div>
+</div>
+
+<div class="header" style="margin-top: 40px;">
+    <h3>🚀 ¡Listo para Probar!</h3>
+    <p>Copia y pega los comandos cURL en tu terminal o usa herramientas como Postman/Insomnia</p>
+    <p><small>Desarrollado con ❤️ para el sector agrícola</small></p>
+</div>
+</body>
+</html>

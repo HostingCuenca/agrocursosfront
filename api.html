@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriCourses API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2E8B57, #228B22);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .nav h3 {
+            margin-bottom: 1rem;
+            color: #2E8B57;
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .nav a {
+            color: #666;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #2E8B57;
+            color: white;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #2E8B57;
+            border-bottom: 3px solid #2E8B57;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .endpoint {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .method {
+            font-weight: bold;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .method.get { background: #28a745; }
+        .method.post { background: #007bff; }
+        .method.put { background: #ffc107; color: #212529; }
+        .method.delete { background: #dc3545; }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .endpoint-body {
+            padding: 1.5rem;
+        }
+
+        .endpoint-description {
+            margin-bottom: 1.5rem;
+            color: #666;
+        }
+
+        .params-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .params-section h4 {
+            color: #495057;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 0.3rem;
+        }
+
+        .param {
+            margin-bottom: 0.8rem;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #2E8B57;
+        }
+
+        .param-name {
+            font-weight: bold;
+            color: #2E8B57;
+            font-family: 'Courier New', monospace;
+        }
+
+        .param-type {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+
+        .param-required {
+            color: #dc3545;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .auth-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-info strong {
+            color: #856404;
+        }
+
+        .response-example {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .role-student { background: #cce5ff; color: #004085; }
+        .role-instructor { background: #fff3cd; color: #856404; }
+        .role-admin { background: #f8d7da; color: #721c24; }
+        .role-public { background: #d1ecf1; color: #0c5460; }
+        .role-authenticated { background: #e2e3e5; color: #383d41; }
+
+        .toc {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .toc h3 {
+            color: #2E8B57;
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        .toc a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .toc a:hover {
+            color: #2E8B57;
+        }
+
+        .error-codes {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .error-codes h5 {
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-codes ul {
+            margin-left: 1rem;
+        }
+
+        .curl-example {
+            background: #212529;
+            color: #f8f9fa;
+            border-radius: 5px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .curl-example .comment {
+            color: #6c757d;
+        }
+
+        .status-info {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .flow-step {
+            display: inline-block;
+            background: #2E8B57;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            margin: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .flow-arrow {
+            display: inline-block;
+            margin: 0 0.5rem;
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav ul {
+                flex-direction: column;
+            }
+
+            .endpoint-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🌾 AgriCourses API</h1>
+        <p>Documentación completa de la API REST para la plataforma de cursos agrícolas</p>
+        <p><strong>Versión:</strong> 1.0.0 | <strong>Puerto:</strong> 3010 | <strong>Base URL:</strong> http://localhost:3010</p>
+    </div>
+
+    <!-- Navegación -->
+    <div class="nav">
+        <h3>📋 Navegación Rápida</h3>
+        <ul>
+            <li><a href="#overview">🔍 Información General</a></li>
+            <li><a href="#authentication">🔐 Autenticación</a></li>
+            <li><a href="#auth-endpoints">👤 Auth</a></li>
+            <li><a href="#course-endpoints">📚 Cursos</a></li>
+            <li><a href="#module-endpoints">📖 Módulos</a></li>
+            <li><a href="#class-endpoints">🎓 Clases</a></li>
+            <li><a href="#assignment-endpoints">📝 Asignaciones</a></li>
+            <li><a href="#enrollment-endpoints">📋 Inscripciones</a></li>
+            <li><a href="#progress-endpoints">📊 Progreso</a></li>
+            <li><a href="#certificate-endpoints">🏆 Certificados</a></li>
+            <li><a href="#virtual-class-endpoints">💻 Clases Virtuales</a></li>
+            <li><a href="#error-codes">⚠️ Errores</a></li>
+        </ul>
+    </div>
+
+    <!-- Información General -->
+    <section id="overview" class="section">
+        <h2>🔍 Información General</h2>
+
+        <div class="status-info">
+            <strong>✅ Estado del API:</strong> Completamente funcional y testeado
+        </div>
+
+        <h3>🏗️ Arquitectura Técnica</h3>
+        <ul>
+            <li><strong>Framework:</strong> Express.js con Node.js</li>
+            <li><strong>Base de Datos:</strong> PostgreSQL con connection pooling</li>
+            <li><strong>Autenticación:</strong> JWT (JSON Web Tokens) con expiración de 7 días</li>
+            <li><strong>Validación:</strong> express-validator para validación de entrada</li>
+            <li><strong>Seguridad:</strong> helmet, cors, express-rate-limit, morgan para logging</li>
+            <li><strong>Gestión de UUIDs:</strong> uuid_generate_v4() para IDs únicos</li>
+        </ul>
+
+        <h3>👥 Sistema de Roles</h3>
+        <div class="param">
+            <span class="role-badge role-student">STUDENT</span>
+            Estudiantes que pueden inscribirse en cursos, completar clases, realizar exámenes
+        </div>
+        <div class="param">
+            <span class="role-badge role-instructor">INSTRUCTOR</span>
+            Instructores que crean y gestionan cursos, módulos, clases, asignaciones
+        </div>
+        <div class="param">
+            <span class="role-badge role-admin">ADMIN</span>
+            Administradores con acceso completo a todos los recursos y estadísticas
+        </div>
+        <div class="param">
+            <span class="role-badge role-public">PUBLIC</span>
+            Endpoints públicos accesibles sin autenticación
+        </div>
+
+        <h3>🏥 Endpoints de Salud del Sistema</h3>
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/health</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Verifica el estado general del servidor y conectividad de la base de datos.</p>
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "status": "OK",
+                        "database": "Connected",
+                        "timestamp": "2025-08-26T00:00:00.000Z",
+                        "environment": "development",
+                        "port": "3010"
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/test-db</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Prueba detallada de la conexión a PostgreSQL con información del esquema.</p>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/test</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Endpoint de prueba simple para verificar que la API responde correctamente.</p>
+            </div>
+        </div>
+
+        <h3>📊 Flujo de Trabajo Típico</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">Registro/Login</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">Crear/Buscar Cursos</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">Inscripción</div>
+            <br><br>
+            <div class="flow-step">Completar Clases</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">Realizar Exámenes</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">Obtener Certificado</div>
+        </div>
+    </section>
+
+    <!-- Autenticación -->
+    <section id="authentication" class="section">
+        <h2>🔐 Sistema de Autenticación</h2>
+
+        <div class="auth-info">
+            <strong>⚠️ Importante:</strong> La mayoría de endpoints requieren autenticación JWT. El token debe incluirse en el header Authorization.
+        </div>
+
+        <h3>📋 Configuración de Headers</h3>
+        <div class="code-block">Content-Type: application/json
+            Authorization: Bearer {JWT_TOKEN}</div>
+
+        <h3>🔑 Estructura del Token JWT</h3>
+        <div class="code-block">{
+            "userId": "b504d424-442b-4cf5-b727-685081f6f313",
+            "email": "usuario@example.com",
+            "role": "student|instructor|admin",
+            "iat": 1756150552,
+            "exp": 1756755352
+            }</div>
+
+        <h3>⏰ Configuración de Tiempo</h3>
+        <ul>
+            <li><strong>Expiración:</strong> 7 días desde la emisión</li>
+            <li><strong>Renovación:</strong> Requiere nuevo login después de expiración</li>
+            <li><strong>Validación:</strong> Cada request valida token contra base de datos</li>
+        </ul>
+
+        <h3>🛡️ Middleware de Seguridad</h3>
+        <ul>
+            <li><code>authenticateToken</code>: Valida JWT y establece req.user</li>
+            <li><code>requireRole(['roles'])</code>: Verifica permisos específicos por rol</li>
+            <li><code>optionalAuth</code>: Autenticación opcional para endpoints híbridos</li>
+            <li><code>requireInstructorOrAdmin</code>: Shortcut para permisos elevados</li>
+        </ul>
+
+        <div class="curl-example">
+            <span class="comment"># Ejemplo de request autenticado</span>
+            curl -X GET "http://localhost:3010/api/auth/profile" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        </div>
+    </section>
+
+    <!-- Endpoints de Autenticación -->
+    <section id="auth-endpoints" class="section">
+        <h2>👤 Endpoints de Autenticación</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/auth/register</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Registra un nuevo usuario en el sistema con validación completa.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">first_name</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Nombre del usuario (max 100 caracteres)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">last_name</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Apellido del usuario (max 100 caracteres)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">email</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Email único válido del usuario
+                    </div>
+                    <div class="param">
+                        <span class="param-name">password</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Contraseña (mínimo 6 caracteres)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">role</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Rol: 'student', 'instructor', 'admin' (default: 'student')
+                    </div>
+                    <div class="param">
+                        <span class="param-name">phone</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Número de teléfono
+                    </div>
+                    <div class="param">
+                        <span class="param-name">country</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>País de residencia
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Registro de usuario estudiante</span>
+                    curl -X POST "http://localhost:3010/api/auth/register" \
+                    -H "Content-Type: application/json" \
+                    -d '{
+                    "first_name": "Juan",
+                    "last_name": "Pérez",
+                    "email": "juan@example.com",
+                    "password": "123456",
+                    "role": "student",
+                    "phone": "+1234567890",
+                    "country": "México"
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Usuario registrado exitosamente",
+                        "user": {
+                        "id": "b504d424-442b-4cf5-b727-685081f6f313",
+                        "email": "juan@example.com",
+                        "first_name": "Juan",
+                        "last_name": "Pérez",
+                        "role": "student",
+                        "is_active": true,
+                        "email_verified": false,
+                        "created_at": "2025-08-26T00:00:00.000Z"
+                        },
+                        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/auth/login</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Autentica usuario con email y contraseña, devuelve JWT token.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">email</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Email del usuario registrado
+                    </div>
+                    <div class="param">
+                        <span class="param-name">password</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Contraseña del usuario
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Login de usuario</span>
+                    curl -X POST "http://localhost:3010/api/auth/login" \
+                    -H "Content-Type: application/json" \
+                    -d '{
+                    "email": "juan@example.com",
+                    "password": "123456"
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Inicio de sesión exitoso",
+                        "user": {
+                        "id": "b504d424-442b-4cf5-b727-685081f6f313",
+                        "email": "juan@example.com",
+                        "first_name": "Juan",
+                        "last_name": "Pérez",
+                        "role": "student",
+                        "is_active": true
+                        },
+                        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/auth/profile</span>
+                <span class="role-badge role-authenticated">AUTHENTICATED</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Obtiene el perfil completo del usuario autenticado.</p>
+
+                <div class="auth-info">
+                    <strong>🔐 Requiere:</strong> JWT token válido en header Authorization
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Obtener perfil del usuario autenticado</span>
+                    curl -X GET "http://localhost:3010/api/auth/profile" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "user": {
+                        "id": "b504d424-442b-4cf5-b727-685081f6f313",
+                        "email": "juan@example.com",
+                        "first_name": "Juan",
+                        "last_name": "Pérez",
+                        "phone": "+1234567890",
+                        "country": "México",
+                        "specialization": null,
+                        "bio": null,
+                        "role": "student",
+                        "is_active": true,
+                        "email_verified": false,
+                        "created_at": "2025-08-26T00:00:00.000Z",
+                        "updated_at": "2025-08-26T00:00:00.000Z"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Cursos -->
+    <section id="course-endpoints" class="section">
+        <h2>📚 Endpoints de Cursos</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/courses</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Lista todos los cursos publicados con paginación, filtros y búsqueda avanzada.</p>
+
+                <div class="params-section">
+                    <h4>🔍 Query Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">page</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Número de página (default: 1, min: 1)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">limit</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Elementos por página (default: 10, max: 50)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">category</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Filtrar por categoría específica
+                    </div>
+                    <div class="param">
+                        <span class="param-name">difficulty_level</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Filtrar por nivel: 'Básico', 'Intermedio', 'Avanzado'
+                    </div>
+                    <div class="param">
+                        <span class="param-name">search</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Búsqueda en título y descripción
+                    </div>
+                    <div class="param">
+                        <span class="param-name">instructor_id</span>
+                        <span class="param-type">uuid</span>
+                        <span class="param-required">optional</span>
+                        <br>Filtrar por instructor específico
+                    </div>
+                    <div class="param">
+                        <span class="param-name">min_price</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Precio mínimo de filtro
+                    </div>
+                    <div class="param">
+                        <span class="param-name">max_price</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Precio máximo de filtro
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Listar cursos con filtros</span>
+                    curl -X GET "http://localhost:3010/api/courses?page=1&limit=5&category=agricultura&difficulty_level=Intermedio&search=sostenible"
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "courses": [
+                        {
+                        "id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "title": "Agricultura Sostenible Moderna",
+                        "description": "Curso completo sobre técnicas modernas de agricultura sostenible",
+                        "thumbnail": null,
+                        "instructor_name": "Test Instructor",
+                        "price": "99.99",
+                        "currency": "USD",
+                        "category": "agricultura",
+                        "difficulty_level": "Intermedio",
+                        "duration_hours": 40,
+                        "language": "es",
+                        "is_published": true,
+                        "created_at": "2025-08-26T00:44:47.000Z"
+                        }
+                        ],
+                        "pagination": {
+                        "current_page": 1,
+                        "total_pages": 1,
+                        "total_items": 1,
+                        "items_per_page": 5
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/courses/{id}</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Obtiene información completa de un curso específico incluyendo módulos.</p>
+
+                <div class="params-section">
+                    <h4>🛤️ URL Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">id</span>
+                        <span class="param-type">uuid</span>
+                        <span class="param-required">required</span>
+                        <br>UUID único del curso
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Obtener curso específico</span>
+                    curl -X GET "http://localhost:3010/api/courses/6da30409-f5f3-4687-a737-05ba38ce6c80"
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/courses</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Crea un nuevo curso. Solo instructores y administradores pueden crear cursos.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">title</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Título del curso (max 255 caracteres)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">description</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Descripción detallada del curso
+                    </div>
+                    <div class="param">
+                        <span class="param-name">category</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Categoría del curso (ej: agricultura, ganadería, etc.)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">difficulty_level</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Nivel de dificultad: 'Básico', 'Intermedio', 'Avanzado'
+                    </div>
+                    <div class="param">
+                        <span class="param-name">duration_hours</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">required</span>
+                        <br>Duración estimada en horas
+                    </div>
+                    <div class="param">
+                        <span class="param-name">price</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Precio del curso (default: 0 para curso gratuito)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">currency</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Moneda del precio (default: 'USD')
+                    </div>
+                    <div class="param">
+                        <span class="param-name">is_published</span>
+                        <span class="param-type">boolean</span>
+                        <span class="param-required">optional</span>
+                        <br>¿Está publicado públicamente? (default: false)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">language</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Idioma del curso (default: 'es')
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Crear nuevo curso como instructor</span>
+                    curl -X POST "http://localhost:3010/api/courses" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "title": "Agricultura Orgánica Moderna",
+                    "description": "Aprende técnicas modernas de agricultura orgánica sostenible",
+                    "category": "agricultura",
+                    "difficulty_level": "Intermedio",
+                    "duration_hours": 40,
+                    "price": 99.99,
+                    "currency": "USD",
+                    "is_published": true,
+                    "language": "es"
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Curso creado exitosamente",
+                        "course": {
+                        "id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "title": "Agricultura Orgánica Moderna",
+                        "description": "Aprende técnicas modernas de agricultura orgánica sostenible",
+                        "instructor_id": "d7f29c39-f1d2-4688-91af-b5588f0c137b",
+                        "price": "99.99",
+                        "currency": "USD",
+                        "is_published": true,
+                        "category": "agricultura",
+                        "difficulty_level": "Intermedio",
+                        "duration_hours": 40,
+                        "language": "es",
+                        "created_at": "2025-08-26T00:44:47.000Z"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method put">PUT</span>
+                <span class="endpoint-url">/api/courses/{id}</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Actualiza un curso existente. Solo el instructor propietario o administrador puede editarlo.</p>
+
+                <div class="auth-info">
+                    <strong>🔐 Permisos:</strong> Solo el instructor que creó el curso o un administrador pueden editarlo.
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method delete">DELETE</span>
+                <span class="endpoint-url">/api/courses/{id}</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Elimina un curso y todos sus datos relacionados (módulos, clases, inscripciones). Operación irreversible.</p>
+
+                <div class="auth-info">
+                    <strong>⚠️ Cuidado:</strong> Elimina permanentemente el curso y todos sus datos relacionados.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Módulos -->
+    <section id="module-endpoints" class="section">
+        <h2>📖 Endpoints de Módulos</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/modules/courses/{courseId}/modules</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Obtiene todos los módulos publicados de un curso específico ordenados por secuencia.</p>
+
+                <div class="curl-example">
+                    <span class="comment"># Listar módulos de un curso</span>
+                    curl -X GET "http://localhost:3010/api/modules/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/modules"
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/modules/courses/{courseId}/modules</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Crea un nuevo módulo dentro de un curso específico.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">title</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Título descriptivo del módulo
+                    </div>
+                    <div class="param">
+                        <span class="param-name">description</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Descripción detallada del contenido del módulo
+                    </div>
+                    <div class="param">
+                        <span class="param-name">order_sequence</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Orden del módulo (auto-asignado si no se especifica)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">is_published</span>
+                        <span class="param-type">boolean</span>
+                        <span class="param-required">optional</span>
+                        <br>¿Está publicado? (default: false)
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Crear nuevo módulo</span>
+                    curl -X POST "http://localhost:3010/api/modules/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/modules" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "title": "Módulo 1: Fundamentos de Agricultura Orgánica",
+                    "description": "Conceptos básicos y principios fundamentales",
+                    "order_sequence": 1,
+                    "is_published": true
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Módulo creado exitosamente",
+                        "module": {
+                        "id": "8fd7c1ef-287b-4a82-a473-9aee1aaa1e7e",
+                        "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "title": "Módulo 1: Fundamentos de Agricultura Orgánica",
+                        "description": "Conceptos básicos y principios fundamentales",
+                        "order_sequence": 1,
+                        "is_published": true,
+                        "created_at": "2025-08-26T00:45:15.000Z"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method put">PUT</span>
+                <span class="endpoint-url">/api/modules/courses/{courseId}/modules/reorder</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Reordena los módulos de un curso específico actualizando su secuencia.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">moduleOrders</span>
+                        <span class="param-type">array</span>
+                        <span class="param-required">required</span>
+                        <br>Array de objetos con id del módulo y nuevo order_sequence
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Reordenar módulos de un curso</span>
+                    curl -X PUT "http://localhost:3010/api/modules/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/modules/reorder" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "moduleOrders": [
+                    { "id": "8fd7c1ef-287b-4a82-a473-9aee1aaa1e7e", "order_sequence": 1 },
+                    { "id": "uuid-module-2", "order_sequence": 2 },
+                    { "id": "uuid-module-3", "order_sequence": 3 }
+                    ]
+                    }'
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Clases -->
+    <section id="class-endpoints" class="section">
+        <h2>🎓 Endpoints de Clases</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/classes/modules/{moduleId}/classes</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Lista todas las clases publicadas de un módulo específico ordenadas por secuencia.</p>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/classes/modules/{moduleId}/classes</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Crea una nueva clase dentro de un módulo específico con soporte para diferentes tipos de contenido.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">title</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Título descriptivo de la clase
+                    </div>
+                    <div class="param">
+                        <span class="param-name">description</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Descripción detallada del contenido
+                    </div>
+                    <div class="param">
+                        <span class="param-name">type</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Tipo de clase: 'video', 'text', 'quiz', 'assignment' (default: 'video')
+                    </div>
+                    <div class="param">
+                        <span class="param-name">content_url</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>URL del contenido multimedia (YouTube, Vimeo, archivo, etc.)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">content_text</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Contenido de texto para clases teóricas
+                    </div>
+                    <div class="param">
+                        <span class="param-name">duration_minutes</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Duración estimada en minutos (default: 0)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">order_sequence</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Orden de la clase (auto-asignado si no se especifica)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">is_published</span>
+                        <span class="param-type">boolean</span>
+                        <span class="param-required">optional</span>
+                        <br>¿Está publicada? (default: false)
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Crear nueva clase de video</span>
+                    curl -X POST "http://localhost:3010/api/classes/modules/8fd7c1ef-287b-4a82-a473-9aee1aaa1e7e/classes" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "title": "Clase 1: Introducción a la Permacultura",
+                    "description": "Conceptos básicos de permacultura aplicada en agricultura",
+                    "type": "video",
+                    "content_url": "https://youtube.com/watch?v=ejemplo123",
+                    "duration_minutes": 30,
+                    "order_sequence": 1,
+                    "is_published": true
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Clase creada exitosamente",
+                        "class": {
+                        "id": "56e314e1-446d-4a0d-95ac-efd37abb5fd3",
+                        "module_id": "8fd7c1ef-287b-4a82-a473-9aee1aaa1e7e",
+                        "title": "Clase 1: Introducción a la Permacultura",
+                        "description": "Conceptos básicos de permacultura aplicada en agricultura",
+                        "type": "video",
+                        "content_url": "https://youtube.com/watch?v=ejemplo123",
+                        "duration_minutes": 30,
+                        "order_sequence": 1,
+                        "is_published": true,
+                        "created_at": "2025-08-26T00:45:30.000Z"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/classes/{id}/complete</span>
+                <span class="role-badge role-student">STUDENT</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Marca una clase específica como completada por el estudiante autenticado. Actualiza automáticamente el progreso del curso.</p>
+
+                <div class="auth-info">
+                    <strong>📝 Requisitos:</strong>
+                    <ul>
+                        <li>Usuario debe ser estudiante</li>
+                        <li>Debe estar inscrito en el curso que contiene esta clase</li>
+                        <li>La clase debe estar publicada</li>
+                    </ul>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Marcar clase como completada</span>
+                    curl -X POST "http://localhost:3010/api/classes/56e314e1-446d-4a0d-95ac-efd37abb5fd3/complete" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Clase marcada como completada",
+                        "completion_percentage": 100
+                        }</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Asignaciones -->
+    <section id="assignment-endpoints" class="section">
+        <h2>📝 Endpoints de Asignaciones y Exámenes</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/assignments/courses/{courseId}/assignments</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Crea una nueva asignación o examen en un curso con soporte para múltiples tipos de preguntas.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">title</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Título de la asignación o examen
+                    </div>
+                    <div class="param">
+                        <span class="param-name">description</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Descripción e instrucciones de la evaluación
+                    </div>
+                    <div class="param">
+                        <span class="param-name">type</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Tipo: 'assignment', 'exam', 'quiz', 'project'
+                    </div>
+                    <div class="param">
+                        <span class="param-name">questions</span>
+                        <span class="param-type">array</span>
+                        <span class="param-required">required</span>
+                        <br>Array de preguntas con estructura: { question, type, options?, correct_answer?, points }
+                    </div>
+                    <div class="param">
+                        <span class="param-name">max_points</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">required</span>
+                        <br>Puntuación máxima total posible
+                    </div>
+                    <div class="param">
+                        <span class="param-name">time_limit_minutes</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Límite de tiempo en minutos (null = sin límite)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">due_date</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Fecha límite de entrega (formato ISO 8601)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">is_published</span>
+                        <span class="param-type">boolean</span>
+                        <span class="param-required">optional</span>
+                        <br>¿Está publicado? (default: false)
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Crear examen con preguntas mixtas</span>
+                    curl -X POST "http://localhost:3010/api/assignments/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/assignments" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "title": "Examen Final - Agricultura Sostenible",
+                    "description": "Evaluación integral de conocimientos del curso completo",
+                    "type": "exam",
+                    "max_points": 100,
+                    "time_limit_minutes": 90,
+                    "is_published": true,
+                    "questions": [
+                    {
+                    "question": "¿Qué es la permacultura?",
+                    "type": "multiple_choice",
+                    "options": [
+                    "Un método de cultivo tradicional",
+                    "Un sistema de diseño sostenible",
+                    "Una técnica de riego específica",
+                    "Un tipo de fertilizante orgánico"
+                    ],
+                    "correct_answer": "Un sistema de diseño sostenible",
+                    "points": 10
+                    },
+                    {
+                    "question": "Explique los tres principios éticos fundamentales de la permacultura y proporcione ejemplos prácticos de cada uno.",
+                    "type": "essay",
+                    "points": 25
+                    }
+                    ]
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Asignación creada exitosamente",
+                        "assignment": {
+                        "id": "09672762-c46d-488e-99cc-6685b562f7c7",
+                        "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "title": "Examen Final - Agricultura Sostenible",
+                        "description": "Evaluación integral de conocimientos del curso completo",
+                        "type": "exam",
+                        "max_points": 100,
+                        "time_limit_minutes": 90,
+                        "is_published": true,
+                        "questions": [...],
+                        "created_at": "2025-08-26T00:46:00.000Z"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/assignments/{id}/attempt</span>
+                <span class="role-badge role-student">STUDENT</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Inicia un nuevo intento de examen para el estudiante autenticado. Crea registro de tiempo y estado.</p>
+
+                <div class="curl-example">
+                    <span class="comment"># Iniciar intento de examen</span>
+                    curl -X POST "http://localhost:3010/api/assignments/09672762-c46d-488e-99cc-6685b562f7c7/attempt" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Intento de examen iniciado",
+                        "attempt": {
+                        "id": "uuid-attempt-id",
+                        "assignment_id": "09672762-c46d-488e-99cc-6685b562f7c7",
+                        "student_id": "b504d424-442b-4cf5-b727-685081f6f313",
+                        "started_at": "2025-08-26T01:00:00.000Z",
+                        "time_limit_minutes": 90,
+                        "status": "in_progress"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/assignments/attempts/{attemptId}/submit</span>
+                <span class="role-badge role-student">STUDENT</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Envía las respuestas de un intento de examen y calcula automáticamente la calificación.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">answers</span>
+                        <span class="param-type">object</span>
+                        <span class="param-required">required</span>
+                        <br>Objeto con respuestas indexadas por ID de pregunta
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Enviar respuestas del examen</span>
+                    curl -X POST "http://localhost:3010/api/assignments/attempts/uuid-attempt-id/submit" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "answers": {
+                    "question_1": "Un sistema de diseño sostenible",
+                    "question_2": "La permacultura se basa en tres principios éticos fundamentales: 1) Cuidado de la Tierra..."
+                    }
+                    }'
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Inscripciones -->
+    <section id="enrollment-endpoints" class="section">
+        <h2>📋 Endpoints de Inscripciones</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/enrollments/courses/{courseId}/enroll</span>
+                <span class="role-badge role-student">STUDENT</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Inscribe al estudiante autenticado en un curso específico. Crea automáticamente registro de progreso inicial.</p>
+
+                <div class="auth-info">
+                    <strong>📝 Requisitos:</strong>
+                    <ul>
+                        <li>Usuario debe tener rol de estudiante</li>
+                        <li>El curso debe estar publicado</li>
+                        <li>El estudiante no puede estar ya inscrito en el curso</li>
+                    </ul>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Inscribirse en un curso</span>
+                    curl -X POST "http://localhost:3010/api/enrollments/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/enroll" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{}'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Inscripción creada exitosamente",
+                        "enrollment": {
+                        "id": "205d4dc8-3da7-41df-a420-744694c60ed5",
+                        "student_id": "b504d424-442b-4cf5-b727-685081f6f313",
+                        "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "enrollment_date": "2025-08-26T00:49:00.000Z",
+                        "status": "enrolled",
+                        "progress_percentage": "0.00",
+                        "course_title": "Curso de Agricultura Moderna",
+                        "student_name": "Test Student"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/enrollments/courses/{courseId}/enrollments</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Lista todas las inscripciones de un curso específico con información detallada de estudiantes.</p>
+
+                <div class="params-section">
+                    <h4>🔍 Query Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">status</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Filtrar por estado: 'enrolled', 'completed', 'cancelled', 'suspended'
+                    </div>
+                    <div class="param">
+                        <span class="param-name">page</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Página de resultados (default: 1)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">limit</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Elementos por página (max: 100)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/enrollments/bulk</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Inscripción masiva de múltiples estudiantes en un curso mediante lista de emails.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">course_id</span>
+                        <span class="param-type">uuid</span>
+                        <span class="param-required">required</span>
+                        <br>ID del curso para inscripción masiva
+                    </div>
+                    <div class="param">
+                        <span class="param-name">student_emails</span>
+                        <span class="param-type">array</span>
+                        <span class="param-required">required</span>
+                        <br>Array de emails de estudiantes a inscribir
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Inscripción masiva de estudiantes</span>
+                    curl -X POST "http://localhost:3010/api/enrollments/bulk" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                    "student_emails": [
+                    "estudiante1@example.com",
+                    "estudiante2@example.com",
+                    "estudiante3@example.com"
+                    ]
+                    }'
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Progreso -->
+    <section id="progress-endpoints" class="section">
+        <h2>📊 Endpoints de Progreso y Dashboards</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/progress/dashboard/{studentId}</span>
+                <span class="role-badge role-student">STUDENT</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Dashboard completo de progreso para un estudiante específico con estadísticas, cursos recientes y tareas pendientes.</p>
+
+                <div class="auth-info">
+                    <strong>🔐 Permisos:</strong> Solo el propio estudiante o administradores pueden acceder a este dashboard.
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Obtener dashboard del estudiante</span>
+                    curl -X GET "http://localhost:3010/api/progress/dashboard/b504d424-442b-4cf5-b727-685081f6f313" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "dashboard": {
+                        "stats": {
+                        "total_courses": "1",
+                        "completed_courses": "0",
+                        "in_progress_courses": "1",
+                        "not_started_courses": "0",
+                        "certificates_earned": "0",
+                        "total_study_time": "0",
+                        "avg_completion": "100.00"
+                        },
+                        "recent_courses": [
+                        {
+                        "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "course_title": "Curso de Agricultura Moderna",
+                        "progress_percentage": "100.00",
+                        "enrollment_date": "2025-08-26T00:49:00.000Z",
+                        "instructor_name": "Test Instructor",
+                        "last_accessed_at": "2025-08-26T00:50:41.000Z"
+                        }
+                        ],
+                        "upcoming_tasks": [
+                        {
+                        "id": "09672762-c46d-488e-99cc-6685b562f7c7",
+                        "assignment_title": "Examen Final",
+                        "course_title": "Curso de Agricultura Moderna",
+                        "max_points": 100,
+                        "attempts_used": "0",
+                        "completed": false
+                        }
+                        ]
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/progress/instructor-dashboard/{instructorId}</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Dashboard especializado para instructores con estadísticas de sus cursos, estudiantes activos y alumnos que necesitan atención.</p>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "dashboard": {
+                        "stats": {
+                        "total_courses": "1",
+                        "total_students": "1",
+                        "students_completed": "0",
+                        "avg_completion": "100.00",
+                        "certificates_issued": "0"
+                        },
+                        "active_courses": [
+                        {
+                        "id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "title": "Curso de Agricultura Moderna",
+                        "enrolled_students": "1",
+                        "avg_completion": "100.00",
+                        "active_last_week": "1"
+                        }
+                        ],
+                        "students_needing_attention": []
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/progress/{studentId}/{courseId}/update-time</span>
+                <span class="role-badge role-student">STUDENT</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Actualiza el tiempo de estudio de un estudiante en un curso específico para seguimiento de horas académicas.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">minutes_studied</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">required</span>
+                        <br>Minutos de estudio a añadir (min: 1, max: 600)
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Actualizar tiempo de estudio</span>
+                    curl -X POST "http://localhost:3010/api/progress/b504d424-442b-4cf5-b727-685081f6f313/6da30409-f5f3-4687-a737-05ba38ce6c80/update-time" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "minutes_studied": 45
+                    }'
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Certificados -->
+    <section id="certificate-endpoints" class="section">
+        <h2>🏆 Endpoints de Certificados</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/certificates/students/{studentId}/certificates</span>
+                <span class="role-badge role-student">STUDENT</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Lista todos los certificados activos de un estudiante específico con detalles completos del curso e instructor.</p>
+
+                <div class="auth-info">
+                    <strong>🔐 Permisos:</strong> Solo el propio estudiante o administradores pueden ver estos certificados.
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Obtener certificados del estudiante</span>
+                    curl -X GET "http://localhost:3010/api/certificates/students/b504d424-442b-4cf5-b727-685081f6f313/certificates" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "certificates": [
+                        {
+                        "id": "uuid-cert-id",
+                        "certificate_number": "CERT-A1B2C3D4",
+                        "course_title": "Agricultura Sostenible Moderna",
+                        "course_category": "agricultura",
+                        "course_level": "Intermedio",
+                        "course_duration": 40,
+                        "instructor_name": "Dr. María López",
+                        "issued_at": "2025-08-26T00:00:00.000Z",
+                        "final_grade": "92.50",
+                        "status": "active"
+                        }
+                        ]
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/certificates/issue</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Emite un nuevo certificado para un estudiante que ha completado satisfactoriamente un curso.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">student_id</span>
+                        <span class="param-type">uuid</span>
+                        <span class="param-required">required</span>
+                        <br>ID del estudiante que recibirá el certificado
+                    </div>
+                    <div class="param">
+                        <span class="param-name">course_id</span>
+                        <span class="param-type">uuid</span>
+                        <span class="param-required">required</span>
+                        <br>ID del curso completado
+                    </div>
+                    <div class="param">
+                        <span class="param-name">final_grade</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Calificación final obtenida (0-100, default: 85)
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Emitir certificado para estudiante</span>
+                    curl -X POST "http://localhost:3010/api/certificates/issue" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "student_id": "b504d424-442b-4cf5-b727-685081f6f313",
+                    "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                    "final_grade": 95.5
+                    }'
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/certificates/{certificateId}/verify</span>
+                <span class="role-badge role-public">PUBLIC</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Verifica públicamente la autenticidad de un certificado mediante su número único. Endpoint público para validación externa.</p>
+
+                <div class="curl-example">
+                    <span class="comment"># Verificar autenticidad de certificado</span>
+                    curl -X GET "http://localhost:3010/api/certificates/CERT-A1B2C3D4/verify"
+                </div>
+
+                <div class="response-example">
+                    <strong>Certificado válido (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "valid": true,
+                        "certificate": {
+                        "certificate_number": "CERT-A1B2C3D4",
+                        "student_name": "Juan Pérez",
+                        "course_title": "Agricultura Sostenible Moderna",
+                        "course_level": "Intermedio",
+                        "instructor_name": "Dr. María López",
+                        "issued_at": "2025-08-26T00:00:00.000Z",
+                        "final_grade": "95.50",
+                        "status": "active"
+                        }
+                        }</div>
+                </div>
+
+                <div class="response-example">
+                    <strong>Certificado inválido (404):</strong>
+                    <div class="code-block">{
+                        "success": false,
+                        "valid": false,
+                        "message": "Certificado no encontrado o revocado"
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/certificates/stats</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Estadísticas completas del sistema de certificados para análisis administrativo.</p>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "stats": {
+                        "total_certificates": "25",
+                        "active_certificates": "23",
+                        "revoked_certificates": "2",
+                        "issued_last_month": "8",
+                        "courses_with_certificates": "12",
+                        "unique_students": "18",
+                        "average_grade": "87.50"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Endpoints de Clases Virtuales -->
+    <section id="virtual-class-endpoints" class="section">
+        <h2>💻 Endpoints de Clases Virtuales</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/virtual-classes/courses/{courseId}/virtual-classes</span>
+                <span class="role-badge role-authenticated">AUTHENTICATED</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Lista todas las clases virtuales programadas para un curso específico con información de asistencia.</p>
+
+                <div class="params-section">
+                    <h4>🔍 Query Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">upcoming</span>
+                        <span class="param-type">boolean</span>
+                        <span class="param-required">optional</span>
+                        <br>Filtrar solo clases futuras (true) o todas (false/omitir)
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Obtener clases virtuales futuras de un curso</span>
+                    curl -X GET "http://localhost:3010/api/virtual-classes/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/virtual-classes?upcoming=true" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (200):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "virtual_classes": [
+                        {
+                        "id": "6291735b-877a-4edf-98ee-8725f96224ab",
+                        "title": "Webinar: Técnicas de Compostaje Avanzado",
+                        "description": "Sesión práctica sobre métodos avanzados de compostaje",
+                        "scheduled_at": "2025-08-27T15:00:00.000Z",
+                        "duration_minutes": 60,
+                        "meeting_url": "https://meet.google.com/abc-def-ghi",
+                        "meeting_id": "abc-def-ghi",
+                        "status": "scheduled",
+                        "max_participants": 30,
+                        "registered_attendees": "0",
+                        "course_title": "Curso de Agricultura Moderna",
+                        "instructor_name": "Test Instructor"
+                        }
+                        ]
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/virtual-classes/courses/{courseId}/virtual-classes</span>
+                <span class="role-badge role-instructor">INSTRUCTOR</span>
+                <span class="role-badge role-admin">ADMIN</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Crea una nueva clase virtual en un curso con soporte para múltiples plataformas de videoconferencia.</p>
+
+                <div class="params-section">
+                    <h4>📥 Body Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">title</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Título descriptivo de la clase virtual
+                    </div>
+                    <div class="param">
+                        <span class="param-name">description</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Descripción detallada del contenido y objetivos
+                    </div>
+                    <div class="param">
+                        <span class="param-name">scheduled_at</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>Fecha y hora programada (ISO 8601, debe ser futura)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">duration_minutes</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">required</span>
+                        <br>Duración estimada en minutos
+                    </div>
+                    <div class="param">
+                        <span class="param-name">meeting_url</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">required</span>
+                        <br>URL completa de la reunión virtual
+                    </div>
+                    <div class="param">
+                        <span class="param-name">meeting_id</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>ID específico de la reunión (Zoom, Teams, etc.)
+                    </div>
+                    <div class="param">
+                        <span class="param-name">meeting_password</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">optional</span>
+                        <br>Contraseña de acceso a la reunión
+                    </div>
+                    <div class="param">
+                        <span class="param-name">max_participants</span>
+                        <span class="param-type">number</span>
+                        <span class="param-required">optional</span>
+                        <br>Límite máximo de participantes
+                    </div>
+                </div>
+
+                <div class="curl-example">
+                    <span class="comment"># Crear nueva clase virtual</span>
+                    curl -X POST "http://localhost:3010/api/virtual-classes/courses/6da30409-f5f3-4687-a737-05ba38ce6c80/virtual-classes" \
+                    -H "Content-Type: application/json" \
+                    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+                    -d '{
+                    "title": "Webinar: Técnicas de Compostaje Avanzado",
+                    "description": "Sesión práctica sobre diferentes métodos de compostaje y su aplicación en agricultura sostenible",
+                    "scheduled_at": "2025-08-30T15:00:00Z",
+                    "duration_minutes": 120,
+                    "meeting_url": "https://meet.google.com/abc-def-ghi",
+                    "meeting_id": "abc-def-ghi",
+                    "meeting_password": "compost123",
+                    "max_participants": 50
+                    }'
+                </div>
+
+                <div class="response-example">
+                    <strong>Respuesta exitosa (201):</strong>
+                    <div class="code-block">{
+                        "success": true,
+                        "message": "Clase virtual creada exitosamente",
+                        "virtual_class": {
+                        "id": "6291735b-877a-4edf-98ee-8725f96224ab",
+                        "course_id": "6da30409-f5f3-4687-a737-05ba38ce6c80",
+                        "title": "Webinar: Técnicas de Compostaje Avanzado",
+                        "description": "Sesión práctica sobre diferentes métodos de compostaje",
+                        "scheduled_at": "2025-08-30T15:00:00.000Z",
+                        "duration_minutes": 120,
+                        "meeting_url": "https://meet.google.com/abc-def-ghi",
+                        "meeting_id": "abc-def-ghi",
+                        "status": "scheduled",
+                        "max_participants": 50,
+                        "created_at": "2025-08-26T01:00:00.000Z"
+                        }
+                        }</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/virtual-classes/{id}/register</span>
+                <span class="role-badge role-student">STUDENT</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="endpoint-description">Registra a un estudiante para participar en una clase virtual específica.</p>
+
+                <div class="auth-info">
+                    <strong>📝 Requisitos:</strong>
+                    <ul>
+                        <li>Usuario debe estar inscrito en el curso</li>
+                        <li>La clase virtual debe estar programada (scheduled)</li>
+                        <li>No debe exceder el límite máximo de participantes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Códigos de Error -->
+    <section id="error-codes" class="section">
+        <h2>⚠️ Códigos de Error y Manejo</h2>
+
+        <div class="error-codes">
+            <h5>🔐 Errores de Autenticación (400-403)</h5>
+            <ul>
+                <li><strong>400 Bad Request:</strong> Datos de entrada inválidos, malformados o faltantes</li>
+                <li><strong>401 Unauthorized:</strong> Token JWT faltante, inválido, expirado o usuario inactivo</li>
+                <li><strong>403 Forbidden:</strong> Usuario autenticado pero sin permisos suficientes para la operación</li>
+            </ul>
+        </div>
+
+        <div class="error-codes">
+            <h5>🔍 Errores de Recursos (404-409)</h5>
+            <ul>
+                <li><strong>404 Not Found:</strong> Recurso solicitado no existe o no está disponible</li>
+                <li><strong>409 Conflict:</strong> Conflicto con el estado actual (ej: usuario ya inscrito)</li>
+            </ul>
+        </div>
+
+        <div class="error-codes">
+            <h5>📝 Errores de Validación (400, 422)</h5>
+            <ul>
+                <li><strong>400 Bad Request:</strong> Error general de validación de datos</li>
+                <li><strong>422 Unprocessable Entity:</strong> Errores de validación específicos con detalles</li>
+                <li>Incluye información detallada sobre campos que fallaron la validación</li>
+            </ul>
+        </div>
+
+        <div class="error-codes">
+            <h5>🔧 Errores del Servidor (500+)</h5>
+            <ul>
+                <li><strong>500 Internal Server Error:</strong> Error interno del servidor o base de datos</li>
+                <li><strong>503 Service Unavailable:</strong> Servicio temporalmente no disponible</li>
+            </ul>
+        </div>
+
+        <h3>📋 Formato Estándar de Respuestas de Error</h3>
+        <div class="code-block">{
+            "error": "Mensaje descriptivo del error",
+            "code": "ERROR_CODE",           // Código específico (opcional)
+            "details": [...],               // Detalles adicionales (desarrollo)
+            "required_roles": [...],        // Para errores de permisos
+            "user_role": "current_role"     // Para errores de permisos
+            }</div>
+
+        <h3>🔍 Ejemplos Detallados de Respuestas de Error</h3>
+
+        <div class="response-example">
+            <strong>Error de Validación Múltiple (400):</strong>
+            <div class="code-block">{
+                "error": "Datos inválidos",
+                "details": [
+                {
+                "type": "field",
+                "msg": "Email debe ser una dirección válida",
+                "path": "email",
+                "location": "body"
+                },
+                {
+                "type": "field",
+                "msg": "Contraseña debe tener al menos 6 caracteres",
+                "path": "password",
+                "location": "body"
+                },
+                {
+                "type": "field",
+                "msg": "El nivel de dificultad debe ser: Básico, Intermedio o Avanzado",
+                "path": "difficulty_level",
+                "location": "body"
+                }
+                ]
+                }</div>
+        </div>
+
+        <div class="response-example">
+            <strong>Error de Permisos Detallado (403):</strong>
+            <div class="code-block">{
+                "error": "Permisos insuficientes",
+                "code": "INSUFFICIENT_PERMISSIONS",
+                "required_roles": ["instructor", "admin"],
+                "user_role": "student"
+                }</div>
+        </div>
+
+        <div class="response-example">
+            <strong>Error de Token Expirado (401):</strong>
+            <div class="code-block">{
+                "error": "Token inválido"
+                }</div>
+        </div>
+
+        <div class="response-example">
+            <strong>Error de Recurso No Encontrado (404):</strong>
+            <div class="code-block">{
+                "error": "Curso no encontrado"
+                }</div>
+        </div>
+
+        <div class="response-example">
+            <strong>Error de Base de Datos (500):</strong>
+            <div class="code-block">{
+                "error": "Error interno del servidor",
+                "details": "Database connection failed"  // Solo en desarrollo
+                }</div>
+        </div>
+
+        <h3>🛠️ Guía de Resolución de Problemas</h3>
+        <div class="error-codes">
+            <h5>Para Desarrolladores Frontend:</h5>
+            <ul>
+                <li><strong>401 Errors:</strong> Renovar token JWT o redirigir a login</li>
+                <li><strong>403 Errors:</strong> Ocultar/deshabilitar funciones según rol del usuario</li>
+                <li><strong>400/422 Errors:</strong> Mostrar mensajes de validación en formularios</li>
+                <li><strong>404 Errors:</strong> Mostrar página/mensaje de "no encontrado"</li>
+                <li><strong>500 Errors:</strong> Mostrar mensaje genérico y reportar error</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Footer con información adicional -->
+    <section class="section">
+        <h2>📚 Recursos Adicionales</h2>
+
+        <h3>🔗 Enlaces Útiles</h3>
+        <ul>
+            <li><strong>Health Check:</strong> <code>GET /health</code></li>
+            <li><strong>Database Test:</strong> <code>GET /test-db</code></li>
+            <li><strong>API Test:</strong> <code>GET /api/test</code></li>
+        </ul>
+
+        <h3>📊 Estado del Proyecto</h3>
+        <div class="status-info">
+            <strong>✅ Estado Actual:</strong> API completamente funcional y testeada
+            <br><strong>🔧 Última Actualización:</strong> 2025-08-26
+            <br><strong>📝 Versión:</strong> 1.0.0
+            <br><strong>🧪 Testing:</strong> Todos los endpoints principales testados por rol
+        </div>
+
+        <h3>🔄 Próximas Mejoras</h3>
+        <ul>
+            <li>Implementación de templates de certificados</li>
+            <li>Sistema de notificaciones push</li>
+            <li>API de reportes avanzados</li>
+            <li>Integración con sistemas de pago</li>
+            <li>Soporte para múltiples idiomas</li>
+        </ul>
+
+        <div style="text-align: center; margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+            <strong>🌾 AgriCourses API Documentation</strong><br>
+            Generado automáticamente - Última actualización: 2025-08-26<br>
+            <em>Para soporte técnico, contactar al equipo de desarrollo</em>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Highlight active section in navigation
+    const observerOptions = {
+        root: null,
+        rootMargin: '-20% 0px -80% 0px',
+        threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                document.querySelectorAll('.nav a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelectorAll(`.nav a[href="#${id}"]`).forEach(link => {
+                    link.classList.add('active');
+                });
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('section[id]').forEach(section => {
+        observer.observe(section);
+    });
+
+    // Copy code functionality
+    document.querySelectorAll('.code-block, .curl-example').forEach(block => {
+        block.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.textContent.trim()).then(() => {
+                // Visual feedback
+                const originalBg = this.style.backgroundColor;
+                this.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    this.style.backgroundColor = originalBg;
+                }, 200);
+            });
+        });
+
+        // Add copy indicator
+        block.style.cursor = 'pointer';
+        block.title = 'Click para copiar';
+    });
+
+    // Expand/collapse functionality for long code blocks
+    document.querySelectorAll('.response-example .code-block').forEach(block => {
+        if (block.scrollHeight > 200) {
+            block.style.maxHeight = '200px';
+            block.style.overflow = 'hidden';
+
+            const expandBtn = document.createElement('button');
+            expandBtn.textContent = '▼ Ver más';
+            expandBtn.style.cssText = `
+                    background: #2E8B57;
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 5px;
+                    margin-top: 0.5rem;
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                `;
+
+            expandBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (block.style.maxHeight === '200px') {
+                    block.style.maxHeight = 'none';
+                    this.textContent = '▲ Ver menos';
+                } else {
+                    block.style.maxHeight = '200px';
+                    this.textContent = '▼ Ver más';
+                }
+            });
+
+            block.parentNode.appendChild(expandBtn);
+        }
+    });
+
+    // Search functionality
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = '🔍 Buscar endpoint...';
+    searchInput.style.cssText = `
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        `;
+
+    const nav = document.querySelector('.nav');
+    nav.insertBefore(searchInput, nav.querySelector('ul'));
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const endpoints = document.querySelectorAll('.endpoint');
+
+        endpoints.forEach(endpoint => {
+            const text = endpoint.textContent.toLowerCase();
+            const isVisible = text.includes(searchTerm);
+            endpoint.style.display = isVisible ? 'block' : 'none';
+        });
+
+        // Also filter navigation links
+        const navLinks = document.querySelectorAll('.nav ul li');
+        navLinks.forEach(link => {
+            const text = link.textContent.toLowerCase();
+            const isVisible = text.includes(searchTerm) || searchTerm === '';
+            link.style.display = isVisible ? 'block' : 'none';
+        });
+    });
+
+    // Add endpoint counter
+    const totalEndpoints = document.querySelectorAll('.endpoint').length;
+    const counterElement = document.createElement('div');
+    counterElement.innerHTML = `<small>📊 Total de endpoints: ${totalEndpoints}</small>`;
+    counterElement.style.cssText = 'text-align: center; color: #666; margin-top: 1rem;';
+    document.querySelector('.nav').appendChild(counterElement);
+</script>
+</body>
+</html>
