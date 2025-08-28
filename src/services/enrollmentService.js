@@ -1,10 +1,17 @@
 import api from './authService';
 
 export const enrollmentService = {
-    // Obtener inscripciones de un estudiante
+    // Obtener inscripciones de un estudiante (desde el dashboard)
     getStudentEnrollments: async (studentId) => {
         try {
-            const response = await api.get(`/students/${studentId}/enrollments`);
+            const response = await api.get(`/progress/dashboard/${studentId}`);
+            // El dashboard devuelve recent_courses que son las inscripciones
+            if (response.data.success && response.data.dashboard?.recent_courses) {
+                return {
+                    success: true,
+                    enrollments: response.data.dashboard.recent_courses
+                };
+            }
             return response.data;
         } catch (error) {
             console.error('Get student enrollments error:', error);
@@ -26,7 +33,7 @@ export const enrollmentService = {
     // Inscribirse en un curso
     enrollInCourse: async (courseId, enrollmentData = {}) => {
         try {
-            const response = await api.post(`/courses/${courseId}/enroll`, enrollmentData);
+            const response = await api.post(`/enrollments/courses/${courseId}/enroll`, enrollmentData);
             return response.data;
         } catch (error) {
             console.error('Enroll in course error:', error);

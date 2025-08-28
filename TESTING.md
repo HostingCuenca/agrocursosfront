@@ -102,6 +102,52 @@ Rol: Estudiante
 - ✅ **2 módulos** con clases de video y texto disponibles
 - ✅ **Progreso 0%** - listo para empezar a aprender
 
-## 🚧 **SIGUIENTE FASE: Mis Cursos**
+## 🔍 **EXPLORAR CURSOS IMPLEMENTADO**
 
-Crear dashboard personal de cursos inscritos con progreso visual.
+### **✅ FUNCIONALIDADES COMPLETAS:**
+- **Página completa de exploración** de todos los cursos disponibles
+- **Búsqueda avanzada** por texto (título, descripción, instructor)  
+- **Sistema de filtros** por categoría, nivel y precio
+- **Grid responsive** de tarjetas de curso con información completa
+- **Navegación directa** a páginas de detalle de curso
+- **Diseño consistente** con DashboardLayout
+- **Estados de carga** y mensajes cuando no hay resultados
+
+### **🎯 CÓMO PROBAR EXPLORAR CURSOS:**
+
+1. **Inicia sesión como cualquier rol** (admin/instructor/student)
+2. **Ve a http://localhost:3002/explorar** desde el menú lateral
+3. **Prueba la búsqueda** escribiendo términos como "agricultura"
+4. **Usa los filtros** por categoría, nivel o precio
+5. **Haz click en "Ver curso"** para ir al detalle
+6. **Verifica responsive design** en mobile/desktop
+
+### **📊 DATOS DE PRUEBA DISPONIBLES:**
+- ✅ **Cursos cargados** desde endpoint GET /api/courses
+- ✅ **Categorías dinámicas** extraídas de los cursos
+- ✅ **Navegación funcional** entre páginas
+- ✅ **Sistema de inscripción** funcional para estudiantes
+
+## 📝 **SISTEMA DE INSCRIPCIONES IMPLEMENTADO**
+
+### **✅ FUNCIONALIDADES COMPLETAS:**
+- **Inscripción en un click** para estudiantes desde página explorar
+- **Indicador visual** de cursos ya inscritos (badge verde "Inscrito")
+- **Estados de carga** durante el proceso de inscripción
+- **Verificación de inscripciones** existentes al cargar la página
+- **Endpoint correcto**: POST /api/enrollments/courses/{courseId}/enroll
+- **Carga de inscripciones**: GET /api/progress/dashboard/{studentId}
+
+### **🎯 CÓMO PROBAR INSCRIPCIONES:**
+
+1. **Inicia sesión como estudiante** (test@test.com / 123456)
+2. **Ve a http://localhost:3002/explorar**
+3. **Busca cursos no inscritos** - verás botón verde "Inscribirse"
+4. **Haz click en "Inscribirse"** - verás loading y mensaje de éxito
+5. **Refresca la página** - ahora verás badge "Inscrito" en lugar del botón
+6. **Solo estudiantes ven botones de inscripción** - admin/instructor no los ven
+
+### **📊 DATOS NECESARIOS:**
+- ✅ **Usuario estudiante** con credenciales válidas
+- ✅ **Cursos publicados** en la base de datos
+- ✅ **Endpoints funcionando** correctamente

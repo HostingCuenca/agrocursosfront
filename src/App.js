@@ -13,6 +13,7 @@ import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import CoursePlayerPage from './pages/CoursePlayerPage';
 import MyCourses from './pages/MyCourses';
+import ExploreCourses from './pages/ExploreCourses';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
@@ -86,15 +87,7 @@ function App() {
                     path="/explorar"
                     element={
                         <ProtectedRoute>
-                            <ComingSoon />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/continuar"
-                    element={
-                        <ProtectedRoute>
-                            <ComingSoon />
+                            <ExploreCourses />
                         </ProtectedRoute>
                     }
                 />

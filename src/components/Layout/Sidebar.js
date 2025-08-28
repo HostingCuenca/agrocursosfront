@@ -12,7 +12,8 @@ import {
     Award,
     UserCheck,
     Calendar,
-    PlayCircle
+    PlayCircle,
+    Search
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -52,8 +53,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 return [
                     ...baseItems,
                     { icon: BookOpen, label: 'Mis Cursos', path: '/mis-cursos' },
-                    { icon: PlayCircle, label: 'Continuar Estudiando', path: '/continuar' },
-                    { icon: BookOpen, label: 'Explorar Cursos', path: '/explorar' },
+                    { icon: Search, label: 'Explorar Cursos', path: '/explorar' },
                     { icon: Award, label: 'Mis Certificados', path: '/certificados' },
                     { icon: Calendar, label: 'Calendario', path: '/calendario' },
                     { icon: BarChart3, label: 'Mi Progreso', path: '/progreso' },

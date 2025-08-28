@@ -53,6 +53,25 @@ const useCourseStore = create((set, get) => ({
         }
     },
 
+    // Obtener todos los cursos (sin parámetros adicionales)
+    getAllCourses: async () => {
+        set({ loading: true, error: null });
+        try {
+            const response = await courseService.getCourses();
+
+            set({
+                courses: response.courses || response.data || [],
+                loading: false
+            });
+
+            return response;
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al obtener cursos';
+            set({ error: errorMessage, loading: false });
+            throw error;
+        }
+    },
+
     // Obtener curso específico
     getCourseById: async (courseId) => {
         set({ loading: true, error: null });
