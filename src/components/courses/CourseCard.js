@@ -1,72 +1,237 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Users, BookOpen, Star, DollarSign } from 'lucide-react';
+import { Clock, Users, BookOpen, Edit, Trash2, Eye, DollarSign, Globe, Calendar } from 'lucide-react';
 import useRolePermissions from '../../hooks/useRolePermissions';
+import useAuthStore from '../../store/authStore';
 
-const CourseCard = ({ course, showActions = true, onEdit, onDelete, onEnroll }) => {
+const CourseCard = ({ 
+    course, 
+    showActions = true, 
+    onEdit, 
+    onDelete, 
+    onEnroll, 
+    viewMode = 'grid' 
+}) => {
     const permissions = useRolePermissions();
+    const { user } = useAuthStore();
 
-    // Validar que course existe y tiene las propiedades necesarias
     if (!course) {
-        return <div className="bg-white rounded-lg shadow-md p-6">Error: Datos del curso no disponibles</div>;
+        return (
+            <div className="bg-white rounded-lg border p-6 text-center">
+                <p className="text-gray-500">Error: Datos del curso no disponibles</p>
+            </div>
+        );
     }
 
-    const getDifficultyColor = (level) => {
-        switch (level) {
-            case 'beginner':
-                return 'bg-green-100 text-green-800';
-            case 'intermediate':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'advanced':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
+    // Mapear niveles de dificultad
+    const getDifficultyDisplay = (level) => {
+        const levelMap = {
+            'Básico': { text: 'Básico', color: 'bg-green-100 text-green-800' },
+            'Intermedio': { text: 'Intermedio', color: 'bg-yellow-100 text-yellow-800' },
+            'Avanzado': { text: 'Avanzado', color: 'bg-red-100 text-red-800' },
+            'beginner': { text: 'Básico', color: 'bg-green-100 text-green-800' },
+            'intermediate': { text: 'Intermedio', color: 'bg-yellow-100 text-yellow-800' },
+            'advanced': { text: 'Avanzado', color: 'bg-red-100 text-red-800' }
+        };
+        return levelMap[level] || { text: level, color: 'bg-gray-100 text-gray-800' };
     };
 
-    const getDifficultyText = (level) => {
-        switch (level) {
-            case 'beginner':
-                return 'Principiante';
-            case 'intermediate':
-                return 'Intermedio';
-            case 'advanced':
-                return 'Avanzado';
-            default:
-                return level;
-        }
+    // Mapear categorías para mostrar
+    const getCategoryDisplay = (category) => {
+        const categoryMap = {
+            'agriculture': 'Agricultura',
+            'livestock': 'Ganadería',
+            'horticulture': 'Horticultura',
+            'agroecology': 'Agroecología',
+            'technology': 'Tecnología',
+            'marketing': 'Comercialización',
+            'sustainability': 'Sostenibilidad'
+        };
+        return categoryMap[category] || category;
     };
 
-    const formatPrice = (price) => {
-        // Manejar casos donde price no es un número válido
+    // Formatear precio
+    const formatPrice = (price, currency = 'USD') => {
         const numPrice = parseFloat(price);
         if (isNaN(numPrice) || numPrice === 0) return 'Gratis';
-        return `$${numPrice.toFixed(2)}`;
+        return `${currency} ${numPrice.toFixed(2)}`;
     };
 
-    const canManageThisCourse = permissions.courses.canEdit(course.instructor_id);
+    // Verificar permisos de gestión
+    const canManageThisCourse = user && (
+        user.role === 'admin' || 
+        (user.role === 'instructor' && course.instructor_id === user.id)
+    );
 
+    const difficultyInfo = getDifficultyDisplay(course.difficulty_level);
+
+    // Vista en lista
+    if (viewMode === 'list') {
+        return (
+            <div className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                <div className="flex">
+                    {/* Imagen del curso */}
+                    <div className="w-48 h-32 bg-gray-200 flex-shrink-0">
+                        {course.thumbnail ? (
+                            <img
+                                src={course.thumbnail}
+                                alt={course.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.parentNode.style.backgroundColor = '#f3f4f6';
+                                }}
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <BookOpen className="w-8 h-8 text-gray-400" />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Contenido */}
+                    <div className="flex-1 p-4 flex justify-between">
+                        <div className="flex-1">
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-2">
+                                <div>
+                                    <div className="flex items-center space-x-2 mb-1">
+                                        <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+                                            {getCategoryDisplay(course.category)}
+                                        </span>
+                                        <span className={`text-xs font-medium px-2 py-1 rounded ${difficultyInfo.color}`}>
+                                            {difficultyInfo.text}
+                                        </span>
+                                        {course.is_published !== undefined && (
+                                            <span className={`text-xs font-medium px-2 py-1 rounded ${
+                                                course.is_published 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-gray-100 text-gray-800'
+                                            }`}>
+                                                {course.is_published ? 'Publicado' : 'Borrador'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                        {course.title}
+                                    </h3>
+                                </div>
+
+                                <div className="text-right">
+                                    <div className="text-lg font-semibold text-gray-900">
+                                        {formatPrice(course.price, course.currency)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                {course.description}
+                            </p>
+
+                            {/* Stats */}
+                            <div className="flex items-center space-x-6 text-sm text-gray-500 mb-3">
+                                <div className="flex items-center">
+                                    <Clock className="w-4 h-4 mr-1" />
+                                    <span>{course.duration_hours || 0}h</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <Users className="w-4 h-4 mr-1" />
+                                    <span>{course.enrolled_count || 0} estudiantes</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <Globe className="w-4 h-4 mr-1" />
+                                    <span>{course.language === 'es' ? 'Español' : course.language === 'en' ? 'Inglés' : 'Portugués'}</span>
+                                </div>
+                                {course.created_at && (
+                                    <div className="flex items-center">
+                                        <Calendar className="w-4 h-4 mr-1" />
+                                        <span>{new Date(course.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        {showActions && (
+                            <div className="flex items-center space-x-2 ml-4">
+                                <Link
+                                    to={`/cursos/${course.id}`}
+                                    className="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                    title="Ver curso"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                </Link>
+
+                                {canManageThisCourse && onEdit && (
+                                    <button
+                                        onClick={() => onEdit(course)}
+                                        className="flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                                        title="Editar curso"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                )}
+
+                                {canManageThisCourse && onDelete && (
+                                    <button
+                                        onClick={() => onDelete(course)}
+                                        className="flex items-center justify-center w-10 h-10 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                                        title="Eliminar curso"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Vista en grilla (por defecto)
     return (
-        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+        <div className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
             {/* Imagen del curso */}
-            {course.thumbnail_url && (
-                <div className="h-48 bg-gray-200 overflow-hidden">
+            <div className="h-48 bg-gray-200 relative">
+                {course.thumbnail ? (
                     <img
-                        src={course.thumbnail_url}
+                        src={course.thumbnail}
                         alt={course.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.target.style.display = 'none';
+                        }}
                     />
-                </div>
-            )}
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <BookOpen className="w-12 h-12 text-gray-400" />
+                    </div>
+                )}
 
-            <div className="p-6">
-                {/* Header con categoría y nivel */}
-                <div className="flex justify-between items-start mb-3">
-                    <span className="text-sm font-medium text-primary-600 bg-primary-50 px-2 py-1 rounded">
-                        {course.category}
+                {/* Status Badge */}
+                {course.is_published !== undefined && (
+                    <div className="absolute top-2 right-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            course.is_published 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                            {course.is_published ? 'Publicado' : 'Borrador'}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Contenido */}
+            <div className="p-4">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+                        {getCategoryDisplay(course.category)}
                     </span>
-                    <span className={`text-xs font-medium px-2 py-1 rounded ${getDifficultyColor(course.difficulty_level)}`}>
-                        {getDifficultyText(course.difficulty_level)}
+                    <span className={`text-xs font-medium px-2 py-1 rounded ${difficultyInfo.color}`}>
+                        {difficultyInfo.text}
                     </span>
                 </div>
 
@@ -74,125 +239,61 @@ const CourseCard = ({ course, showActions = true, onEdit, onDelete, onEnroll }) 
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                     {course.title}
                 </h3>
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                     {course.description}
                 </p>
 
-                {/* Instructor */}
-                {course.instructor_name && (
-                    <p className="text-sm text-gray-500 mb-3">
-                        Por: {course.instructor_name}
-                    </p>
-                )}
-
-                {/* Estadísticas del curso */}
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>{course.duration_hours || 0}h</span>
-                        </div>
-                        <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-1" />
-                            <span>{course.enrolled_count || 0}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <BookOpen className="w-4 h-4 mr-1" />
-                            <span>{course.modules_count || 0} módulos</span>
-                        </div>
+                {/* Stats */}
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                    <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{course.duration_hours || 0}h</span>
+                    </div>
+                    <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-1" />
+                        <span>{course.enrolled_count || 0}</span>
+                    </div>
+                    <div className="flex items-center">
+                        <Globe className="w-4 h-4 mr-1" />
+                        <span>{course.language === 'es' ? 'ES' : course.language === 'en' ? 'EN' : 'PT'}</span>
                     </div>
                 </div>
 
                 {/* Precio */}
                 <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                        <DollarSign className="w-4 h-4 mr-1 text-gray-400" />
-                        <span className="text-lg font-semibold text-gray-900">
-                            {formatPrice(course.price || 0)}
-                        </span>
+                    <div className="text-lg font-semibold text-gray-900">
+                        {formatPrice(course.price, course.currency)}
                     </div>
-                    
-                    {course.rating && (
-                        <div className="flex items-center">
-                            <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                            <span className="text-sm font-medium">{course.rating}</span>
-                        </div>
-                    )}
                 </div>
 
-                {/* Estado de inscripción */}
-                {course.enrollment_status && (
-                    <div className="mb-4">
-                        <span className={`text-xs px-2 py-1 rounded font-medium ${
-                            course.enrollment_status === 'active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : course.enrollment_status === 'completed'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                        }`}>
-                            {course.enrollment_status === 'active' && 'Inscrito'}
-                            {course.enrollment_status === 'completed' && 'Completado'}
-                            {course.enrollment_status === 'pending' && 'Pendiente'}
-                        </span>
-                    </div>
-                )}
-
-                {/* Progreso si está inscrito */}
-                {course.progress_percentage !== undefined && (
-                    <div className="mb-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                            <span>Progreso</span>
-                            <span>{course.progress_percentage}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${course.progress_percentage}%` }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Acciones */}
+                {/* Actions */}
                 {showActions && (
-                    <div className="flex gap-2">
-                        {/* Ver curso */}
+                    <div className="flex space-x-2">
                         <Link
                             to={`/cursos/${course.id}`}
-                            className="flex-1 bg-primary-600 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                            className="flex-1 flex items-center justify-center bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
                         >
-                            Ver Curso
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver
                         </Link>
 
-                        {/* Inscribirse (solo estudiantes) */}
-                        {permissions.courses.canEnroll && !course.enrollment_status && onEnroll && (
-                            <button
-                                onClick={() => onEnroll(course)}
-                                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                            >
-                                Inscribirse
-                            </button>
-                        )}
-
-                        {/* Editar (instructor propietario/admin) */}
                         {canManageThisCourse && onEdit && (
                             <button
                                 onClick={() => onEdit(course)}
-                                className="bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                                title="Editar curso"
+                                className="flex-1 flex items-center justify-center bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
                             >
-                                ✏️
+                                <Edit className="w-4 h-4 mr-1" />
+                                Editar
                             </button>
                         )}
 
-                        {/* Eliminar (instructor propietario/admin) */}
                         {canManageThisCourse && onDelete && (
                             <button
                                 onClick={() => onDelete(course)}
-                                className="bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition-colors text-sm"
-                                title="Eliminar curso"
+                                className="flex items-center justify-center bg-red-100 text-red-700 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors"
+                                title="Eliminar"
                             >
-                                🗑️
+                                <Trash2 className="w-4 h-4" />
                             </button>
                         )}
                     </div>

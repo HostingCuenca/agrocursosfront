@@ -12,116 +12,57 @@ import {
     Star
 } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
+import EnrollmentStatus from '../components/EnrollmentStatus';
+import { enrollmentService } from '../services/enrollmentService';
 import useAuthStore from '../store/authStore';
 
 const MyCourses = () => {
     const { user } = useAuthStore();
     const navigate = useNavigate();
     
-    const [courses, setCourses] = useState([]);
+    const [enrollments, setEnrollments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, active, completed
+    const [filter, setFilter] = useState('all'); // all, enrolled, pending, rejected, completed
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Simular carga de cursos del estudiante
+    // Cargar inscripciones del estudiante
     useEffect(() => {
-        const loadMyCourses = async () => {
+        const loadMyEnrollments = async () => {
+            if (!user?.id) return;
+            
             try {
                 setLoading(true);
-                
-                // TODO: Implementar llamada real a la API
-                // Simulando datos por ahora
-                setTimeout(() => {
-                    const mockCourses = [
-                        {
-                            id: '6da30409-f5f3-4687-a737-05ba38ce6c80',
-                            title: 'Curso de Agricultura Moderna',
-                            description: 'Curso completo sobre técnicas modernas de agricultura',
-                            thumbnail: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop',
-                            instructor_name: 'Test Instructor',
-                            progress_percentage: 15,
-                            total_modules: 2,
-                            completed_modules: 0,
-                            total_classes: 3,
-                            completed_classes: 1,
-                            estimated_duration: '4h 30min',
-                            enrollment_date: '2025-08-27',
-                            last_accessed: '2025-08-27',
-                            status: 'active',
-                            next_class: {
-                                id: 'next-class-1',
-                                title: 'Preparación del Suelo',
-                                duration: '25min'
-                            }
-                        },
-                        {
-                            id: 'course-2',
-                            title: 'Agricultura Orgánica Básica',
-                            description: 'Aprende los fundamentos de la agricultura orgánica desde cero',
-                            thumbnail: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
-                            instructor_name: 'Carlos Mendez',
-                            progress_percentage: 75,
-                            total_modules: 3,
-                            completed_modules: 2,
-                            total_classes: 8,
-                            completed_classes: 6,
-                            estimated_duration: '6h 15min',
-                            enrollment_date: '2025-08-20',
-                            last_accessed: '2025-08-26',
-                            status: 'active',
-                            next_class: {
-                                id: 'next-class-2',
-                                title: 'Certificación Orgánica',
-                                duration: '35min'
-                            }
-                        },
-                        {
-                            id: 'course-3',
-                            title: 'Fundamentos de Compostaje',
-                            description: 'Técnicas avanzadas de compostaje y fertilización natural',
-                            thumbnail: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop',
-                            instructor_name: 'María González',
-                            progress_percentage: 100,
-                            total_modules: 2,
-                            completed_modules: 2,
-                            total_classes: 5,
-                            completed_classes: 5,
-                            estimated_duration: '3h 45min',
-                            enrollment_date: '2025-08-10',
-                            last_accessed: '2025-08-25',
-                            status: 'completed',
-                            completion_date: '2025-08-25',
-                            final_grade: 95
-                        }
-                    ];
-                    setCourses(mockCourses);
-                    setLoading(false);
-                }, 1000);
-                
+                const response = await enrollmentService.getStudentEnrollments(user.id);
+                setEnrollments(response.enrollments || []);
             } catch (error) {
-                console.error('Error loading my courses:', error);
+                console.error('Error loading my enrollments:', error);
+            } finally {
                 setLoading(false);
             }
         };
 
-        loadMyCourses();
-    }, []);
+        loadMyEnrollments();
+    }, [user]);
 
-    // Filtrar cursos
-    const filteredCourses = courses.filter(course => {
-        const matchesFilter = filter === 'all' || course.status === filter;
-        const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            course.instructor_name.toLowerCase().includes(searchTerm.toLowerCase());
+    // Filtrar inscripciones
+    const filteredEnrollments = enrollments.filter(enrollment => {
+        const matchesFilter = filter === 'all' || 
+                            (filter === 'active' && enrollment.status === 'enrolled') ||
+                            enrollment.status === filter;
+        const matchesSearch = enrollment.course_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            enrollment.instructor_name?.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesFilter && matchesSearch;
     });
 
     // Estadísticas generales
     const stats = {
-        total: courses.length,
-        active: courses.filter(c => c.status === 'active').length,
-        completed: courses.filter(c => c.status === 'completed').length,
-        totalHours: courses.reduce((acc, course) => {
-            const hours = parseFloat(course.estimated_duration.split('h')[0] || 0);
+        total: enrollments.length,
+        enrolled: enrollments.filter(e => e.status === 'enrolled').length,
+        pending: enrollments.filter(e => e.status === 'pending').length,
+        rejected: enrollments.filter(e => e.status === 'rejected').length,
+        completed: enrollments.filter(e => e.status === 'completed').length,
+        totalHours: enrollments.reduce((acc, enrollment) => {
+            const hours = parseFloat(enrollment.course_duration || 0);
             return acc + hours;
         }, 0)
     };
@@ -138,6 +79,10 @@ const MyCourses = () => {
 
     const handleViewCourse = (courseId) => {
         navigate(`/cursos/${courseId}`);
+    };
+
+    const canAccessCourse = (status) => {
+        return status === 'enrolled' || status === 'completed';
     };
 
     if (loading) {
@@ -160,51 +105,63 @@ const MyCourses = () => {
                 </div>
 
                 {/* Estadísticas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
                         <div className="flex items-center">
                             <div className="p-2 bg-blue-100 rounded-lg">
-                                <BookOpen className="h-6 w-6 text-blue-600" />
+                                <BookOpen className="h-5 w-5 text-blue-600" />
                             </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Cursos</p>
-                                <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-600">Total</p>
+                                <p className="text-xl font-semibold text-gray-900">{stats.total}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
                         <div className="flex items-center">
                             <div className="p-2 bg-green-100 rounded-lg">
-                                <TrendingUp className="h-6 w-6 text-green-600" />
+                                <CheckCircle className="h-5 w-5 text-green-600" />
                             </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">En Progreso</p>
-                                <p className="text-2xl font-semibold text-gray-900">{stats.active}</p>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-600">Inscritos</p>
+                                <p className="text-xl font-semibold text-gray-900">{stats.enrolled}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-orange-100 rounded-lg">
+                                <Clock className="h-5 w-5 text-orange-600" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-600">Pendientes</p>
+                                <p className="text-xl font-semibold text-gray-900">{stats.pending}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-red-100 rounded-lg">
+                                <TrendingUp className="h-5 w-5 text-red-600" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-600">Rechazados</p>
+                                <p className="text-xl font-semibold text-gray-900">{stats.rejected}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
                         <div className="flex items-center">
                             <div className="p-2 bg-purple-100 rounded-lg">
-                                <CheckCircle className="h-6 w-6 text-purple-600" />
+                                <Star className="h-5 w-5 text-purple-600" />
                             </div>
-                            <div className="ml-4">
+                            <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-600">Completados</p>
-                                <p className="text-2xl font-semibold text-gray-900">{stats.completed}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-lg shadow-sm border">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-yellow-100 rounded-lg">
-                                <Clock className="h-6 w-6 text-yellow-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Horas Totales</p>
-                                <p className="text-2xl font-semibold text-gray-900">{stats.totalHours}h</p>
+                                <p className="text-xl font-semibold text-gray-900">{stats.completed}</p>
                             </div>
                         </div>
                     </div>
@@ -227,24 +184,34 @@ const MyCourses = () => {
                                     Todos ({stats.total})
                                 </button>
                                 <button
-                                    onClick={() => setFilter('active')}
+                                    onClick={() => setFilter('enrolled')}
                                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                                        filter === 'active'
+                                        filter === 'enrolled'
                                             ? 'bg-green-100 text-green-800'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                                 >
-                                    En Progreso ({stats.active})
+                                    Inscritos ({stats.enrolled})
                                 </button>
                                 <button
-                                    onClick={() => setFilter('completed')}
+                                    onClick={() => setFilter('pending')}
                                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                                        filter === 'completed'
-                                            ? 'bg-purple-100 text-purple-800'
+                                        filter === 'pending'
+                                            ? 'bg-orange-100 text-orange-800'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                                 >
-                                    Completados ({stats.completed})
+                                    Pendientes ({stats.pending})
+                                </button>
+                                <button
+                                    onClick={() => setFilter('rejected')}
+                                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                                        filter === 'rejected'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    Rechazados ({stats.rejected})
                                 </button>
                             </div>
                         </div>
@@ -262,16 +229,16 @@ const MyCourses = () => {
                     </div>
                 </div>
 
-                {/* Lista de cursos */}
+                {/* Lista de inscripciones */}
                 <div className="space-y-6">
-                    {filteredCourses.length === 0 ? (
+                    {filteredEnrollments.length === 0 ? (
                         <div className="bg-white p-12 rounded-lg shadow-sm border text-center">
                             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes cursos</h3>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes inscripciones</h3>
                             <p className="text-gray-600 mb-6">
                                 {filter === 'all' 
                                     ? 'Aún no te has inscrito en ningún curso'
-                                    : `No tienes cursos ${filter === 'active' ? 'en progreso' : 'completados'}`
+                                    : `No tienes inscripciones con estado "${filter}"`
                                 }
                             </p>
                             <Link
@@ -283,14 +250,14 @@ const MyCourses = () => {
                             </Link>
                         </div>
                     ) : (
-                        filteredCourses.map((course) => (
-                            <div key={course.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                        filteredEnrollments.map((enrollment) => (
+                            <div key={enrollment.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
                                 <div className="flex flex-col md:flex-row">
                                     {/* Thumbnail */}
                                     <div className="md:w-64 h-48 md:h-auto bg-gray-200 rounded-t-lg md:rounded-l-lg md:rounded-t-none overflow-hidden">
                                         <img
-                                            src={course.thumbnail}
-                                            alt={course.title}
+                                            src={enrollment.course_thumbnail || 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop'}
+                                            alt={enrollment.course_title}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>
@@ -301,82 +268,108 @@ const MyCourses = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-start justify-between mb-2">
                                                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                                        {course.title}
+                                                        {enrollment.course_title}
                                                     </h3>
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                        course.status === 'completed'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-blue-100 text-blue-800'
-                                                    }`}>
-                                                        {course.status === 'completed' ? 'Completado' : 'En Progreso'}
-                                                    </span>
+                                                    <EnrollmentStatus 
+                                                        status={enrollment.status}
+                                                        metadata={enrollment.metadata}
+                                                        size="sm"
+                                                        showReason={false}
+                                                    />
                                                 </div>
 
-                                                <p className="text-gray-600 mb-4 line-clamp-2">{course.description}</p>
+                                                <p className="text-gray-600 mb-4 line-clamp-2">{enrollment.course_description}</p>
 
                                                 <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
-                                                    <span>Instructor: {course.instructor_name}</span>
+                                                    <span>Instructor: {enrollment.instructor_name}</span>
                                                     <span>•</span>
                                                     <span className="flex items-center">
                                                         <Clock className="w-4 h-4 mr-1" />
-                                                        {course.estimated_duration}
+                                                        {enrollment.course_duration || 0}h
                                                     </span>
                                                     <span>•</span>
-                                                    <span>{course.total_modules} módulos</span>
+                                                    <span className="flex items-center">
+                                                        <Calendar className="w-4 h-4 mr-1" />
+                                                        {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                                                    </span>
                                                 </div>
 
-                                                {/* Progreso */}
-                                                <div className="mb-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-sm font-medium text-gray-700">
-                                                            Progreso: {course.progress_percentage}%
-                                                        </span>
-                                                        {course.status === 'completed' && course.final_grade && (
-                                                            <div className="flex items-center">
-                                                                <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                                                                <span className="text-sm font-medium text-gray-700">
-                                                                    {course.final_grade}%
-                                                                </span>
-                                                            </div>
-                                                        )}
+                                                {/* Progreso solo para cursos inscritos o completados */}
+                                                {canAccessCourse(enrollment.status) && (
+                                                    <div className="mb-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                Progreso: {parseFloat(enrollment.progress_percentage || 0)}%
+                                                            </span>
+                                                            {enrollment.status === 'completed' && enrollment.final_grade && (
+                                                                <div className="flex items-center">
+                                                                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                                                                    <span className="text-sm font-medium text-gray-700">
+                                                                        {enrollment.final_grade}%
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div
+                                                                className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(parseFloat(enrollment.progress_percentage || 0))}`}
+                                                                style={{ width: `${parseFloat(enrollment.progress_percentage || 0)}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                                            <span>{enrollment.completed_classes || 0} de {enrollment.total_classes_started || 0} clases iniciadas</span>
+                                                            {enrollment.status === 'enrolled' && parseFloat(enrollment.progress_percentage || 0) < 100 && (
+                                                                <span>En progreso</span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div
-                                                            className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(course.progress_percentage)}`}
-                                                            style={{ width: `${course.progress_percentage}%` }}
-                                                        />
+                                                )}
+
+                                                {/* Mostrar razón de rechazo si aplica */}
+                                                {enrollment.status === 'rejected' && enrollment.metadata?.rejection_reason && (
+                                                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                        <p className="text-sm text-red-800">
+                                                            <strong>Razón del rechazo:</strong> {enrollment.metadata.rejection_reason}
+                                                        </p>
                                                     </div>
-                                                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                                        <span>{course.completed_classes} de {course.total_classes} clases</span>
-                                                        {course.next_class && course.status === 'active' && (
-                                                            <span>Siguiente: {course.next_class.title}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
 
                                             {/* Botones de acción */}
                                             <div className="flex items-center space-x-3">
-                                                {course.status === 'active' ? (
+                                                {enrollment.status === 'enrolled' ? (
                                                     <button
-                                                        onClick={() => handleContinueLearning(course.id)}
+                                                        onClick={() => handleContinueLearning(enrollment.course_id)}
                                                         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
                                                     >
                                                         <PlayCircle className="w-4 h-4" />
-                                                        <span>Continuar</span>
+                                                        <span>Continuar Aprendiendo</span>
                                                     </button>
-                                                ) : (
+                                                ) : enrollment.status === 'completed' ? (
                                                     <button
-                                                        onClick={() => handleViewCourse(course.id)}
+                                                        onClick={() => handleViewCourse(enrollment.course_id)}
                                                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
                                                         <span>Ver Certificado</span>
                                                     </button>
-                                                )}
+                                                ) : enrollment.status === 'pending' ? (
+                                                    <div className="text-sm text-orange-600 flex items-center">
+                                                        <Clock className="w-4 h-4 mr-2" />
+                                                        <span>Esperando aprobación del instructor</span>
+                                                    </div>
+                                                ) : enrollment.status === 'rejected' ? (
+                                                    <button
+                                                        onClick={() => handleViewCourse(enrollment.course_id)}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                                                    >
+                                                        <BookOpen className="w-4 h-4" />
+                                                        <span>Volver a Solicitar</span>
+                                                    </button>
+                                                ) : null}
 
                                                 <button
-                                                    onClick={() => handleViewCourse(course.id)}
+                                                    onClick={() => handleViewCourse(enrollment.course_id)}
                                                     className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-colors"
                                                 >
                                                     Ver Detalles

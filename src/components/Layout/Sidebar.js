@@ -13,7 +13,8 @@ import {
     UserCheck,
     Calendar,
     PlayCircle,
-    Search
+    Search,
+    UserPlus
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -42,8 +43,9 @@ const Sidebar = ({ isOpen, onClose }) => {
             case 'instructor':
                 return [
                     ...baseItems,
-                    { icon: BookOpen, label: 'Mis Cursos', path: '/mis-cursos' },
+                    { icon: BookOpen, label: 'Gestión de Cursos', path: '/cursos' },
                     { icon: Users, label: 'Mis Estudiantes', path: '/mis-estudiantes' },
+                    { icon: UserPlus, label: 'Inscripciones', path: '/inscripciones' },
                     { icon: FileText, label: 'Módulos', path: '/modulos' },
                     { icon: Award, label: 'Certificados', path: '/certificados' },
                     { icon: BarChart3, label: 'Estadísticas', path: '/estadisticas' },

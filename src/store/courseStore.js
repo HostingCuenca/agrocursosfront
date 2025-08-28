@@ -21,26 +21,32 @@ const useCourseStore = create((set, get) => ({
         search: ''
     },
 
-    // Acciones - Obtener cursos públicos (con filtros)
+    // Acciones - Obtener cursos públicos (con filtros, sin paginación automática)
     getCourses: async (params = {}) => {
         set({ loading: true, error: null });
         try {
-            const response = await courseService.getCourses({
-                page: params.page || get().pagination.page,
-                limit: params.limit || get().pagination.limit,
-                category: params.category || get().filters.category,
-                level: params.level || get().filters.level,
-                search: params.search || get().filters.search,
-                ...params
-            });
+            // Solo usar los parámetros que se pasan explícitamente
+            const queryParams = {};
+            if (params.category) queryParams.category = params.category;
+            if (params.level) queryParams.level = params.level; 
+            if (params.search) queryParams.search = params.search;
+            
+            // Solo agregar paginación si se solicita explícitamente
+            if (params.page && params.limit) {
+                queryParams.page = params.page;
+                queryParams.limit = params.limit;
+            }
+
+            const response = await courseService.getCourses(queryParams);
 
             set({
                 courses: response.courses || response.data || [],
+                // Mantener info de paginación si viene en la respuesta, sino valores por defecto
                 pagination: {
                     page: response.pagination?.page || 1,
-                    limit: response.pagination?.limit || 10,
-                    total: response.pagination?.total || 0,
-                    totalPages: response.pagination?.totalPages || 0
+                    limit: response.pagination?.limit || response.courses?.length || 0,
+                    total: response.pagination?.total || response.courses?.length || 0,
+                    totalPages: response.pagination?.totalPages || 1
                 },
                 loading: false
             });

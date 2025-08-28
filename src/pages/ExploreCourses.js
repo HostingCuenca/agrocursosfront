@@ -5,24 +5,26 @@ import {
     Filter, 
     Clock, 
     Users, 
-    Star, 
     BookOpen, 
     Play, 
     ChevronRight,
-    DollarSign,
-    Award,
     User,
-    CheckCircle
+    RefreshCw
 } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
-import useCourseStore from '../store/courseStore';
-import useAuthStore from '../store/authStore';
+import { EnrollmentBadge } from '../components/EnrollmentStatus';
+import { courseService } from '../services/courseService';
 import { enrollmentService } from '../services/enrollmentService';
+import useAuthStore from '../store/authStore';
 
 const ExploreCourses = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { courses, loading, getAllCourses, searchCourses } = useCourseStore();
+    
+    // Estados para datos
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     
     // Estados para filtros y búsqueda
     const [searchQuery, setSearchQuery] = useState('');
@@ -31,73 +33,76 @@ const ExploreCourses = () => {
     const [priceFilter, setPriceFilter] = useState('');
     const [showFilters, setShowFilters] = useState(false);
 
-    // Estados para datos
+    // Estados para datos procesados
     const [categories, setCategories] = useState([]);
     const [filteredCourses, setFilteredCourses] = useState([]);
-    const [enrollingCourses, setEnrollingCourses] = useState(new Set());
-    const [enrolledCourses, setEnrolledCourses] = useState(new Set());
+    const [requestingCourses, setRequestingCourses] = useState(new Set());
 
-    // Cargar cursos al montar el componente
+    // Cargar datos iniciales
     useEffect(() => {
-        loadAllCourses();
-    }, []);
+        loadInitialData();
+    }, [user]);
 
     // Filtrar cursos cuando cambian los filtros
     useEffect(() => {
         filterCourses();
     }, [courses, searchQuery, selectedCategory, selectedLevel, priceFilter]);
 
-    const loadAllCourses = async () => {
-        try {
-            await getAllCourses();
-            
-            // Extraer categorías únicas de los cursos
-            const uniqueCategories = [...new Set(courses.map(course => course.category).filter(Boolean))];
-            setCategories(uniqueCategories);
-            
-            // Cargar inscripciones del usuario si es estudiante
-            if (user?.id && user?.role === 'student') {
-                await loadUserEnrollments();
-            }
-        } catch (error) {
-            console.error('Error loading courses:', error);
-        }
-    };
-
-    const loadUserEnrollments = async () => {
-        try {
-            const response = await enrollmentService.getStudentEnrollments(user.id);
-            if (response.success && response.enrollments) {
-                const enrolledCourseIds = new Set(
-                    response.enrollments.map(enrollment => enrollment.course_id)
-                );
-                setEnrolledCourses(enrolledCourseIds);
-            }
-        } catch (error) {
-            console.error('Error loading user enrollments:', error);
-        }
-    };
-
-    const handleEnrollInCourse = async (courseId) => {
-        if (enrollingCourses.has(courseId)) return;
-
-        setEnrollingCourses(prev => new Set([...prev, courseId]));
+    // Cargar todos los datos iniciales
+    const loadInitialData = async () => {
+        setLoading(true);
+        setError(null);
         
         try {
-            const response = await enrollmentService.enrollInCourse(courseId);
+            // Cargar cursos con estado de inscripción incluido
+            const coursesResponse = await courseService.getCourses();
+            const allCourses = coursesResponse.courses || [];
+            setCourses(allCourses);
+            
+            // Extraer categorías únicas
+            const uniqueCategories = [...new Set(allCourses.map(course => course.category).filter(Boolean))];
+            setCategories(uniqueCategories);
+        } catch (error) {
+            console.error('Error loading data:', error);
+            setError('Error al cargar los cursos');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Recargar cursos después de una acción
+    const reloadCourses = async () => {
+        try {
+            const coursesResponse = await courseService.getCourses();
+            const allCourses = coursesResponse.courses || [];
+            setCourses(allCourses);
+        } catch (error) {
+            console.error('Error reloading courses:', error);
+        }
+    };
+
+    // Manejar solicitud de inscripción
+    const handleRequestEnrollment = async (courseId) => {
+        if (requestingCourses.has(courseId)) return;
+
+        setRequestingCourses(prev => new Set([...prev, courseId]));
+        
+        try {
+            const response = await enrollmentService.requestEnrollment(courseId);
             
             if (response.success) {
-                setEnrolledCourses(prev => new Set([...prev, courseId]));
-                // Mostrar mensaje de éxito
-                alert('¡Te has inscrito exitosamente en el curso!');
-            } else {
-                alert('Error al inscribirse en el curso. Intenta de nuevo.');
+                // Recargar cursos para obtener el estado actualizado
+                await reloadCourses();
+                
+                // Mostrar notificación de éxito
+                alert(response.message || 'Solicitud de inscripción enviada. Esperando aprobación del instructor.');
             }
         } catch (error) {
-            console.error('Error enrolling in course:', error);
-            alert('Error al inscribirse en el curso. Intenta de nuevo.');
+            console.error('Error requesting enrollment:', error);
+            const errorMessage = error.response?.data?.error || 'Error al solicitar inscripción';
+            alert(errorMessage);
         } finally {
-            setEnrollingCourses(prev => {
+            setRequestingCourses(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(courseId);
                 return newSet;
@@ -105,10 +110,11 @@ const ExploreCourses = () => {
         }
     };
 
+    // Filtrar cursos según criterios
     const filterCourses = () => {
         let filtered = [...courses];
 
-        // Filtro por búsqueda de texto
+        // Filtro por texto
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(course =>
@@ -123,37 +129,35 @@ const ExploreCourses = () => {
             filtered = filtered.filter(course => course.category === selectedCategory);
         }
 
-        // Filtro por nivel (maneja tanto level como difficulty_level)
+        // Filtro por nivel
         if (selectedLevel) {
             filtered = filtered.filter(course => {
-                const courseLevel = course.level || course.difficulty_level;
-                if (!courseLevel) return false;
+                const courseLevel = (course.level || course.difficulty_level || '').toLowerCase();
+                const selectedLevelNorm = selectedLevel.toLowerCase();
                 
-                // Normalizar los valores para comparación
-                const normalizedCourseLevel = courseLevel.toLowerCase();
-                const normalizedSelectedLevel = selectedLevel.toLowerCase();
-                
-                return normalizedCourseLevel === normalizedSelectedLevel ||
-                       (normalizedSelectedLevel === 'beginner' && (normalizedCourseLevel === 'básico' || normalizedCourseLevel === 'beginner')) ||
-                       (normalizedSelectedLevel === 'intermediate' && (normalizedCourseLevel === 'intermedio' || normalizedCourseLevel === 'intermediate')) ||
-                       (normalizedSelectedLevel === 'advanced' && (normalizedCourseLevel === 'avanzado' || normalizedCourseLevel === 'advanced'));
+                return courseLevel === selectedLevelNorm ||
+                       (selectedLevelNorm === 'beginner' && courseLevel.includes('básico')) ||
+                       (selectedLevelNorm === 'intermediate' && courseLevel.includes('intermedio')) ||
+                       (selectedLevelNorm === 'advanced' && courseLevel.includes('avanzado'));
             });
         }
 
         // Filtro por precio
         if (priceFilter === 'free') {
-            filtered = filtered.filter(course => !course.price || course.price === 0);
+            filtered = filtered.filter(course => !course.price || parseFloat(course.price) === 0);
         } else if (priceFilter === 'paid') {
-            filtered = filtered.filter(course => course.price && course.price > 0);
+            filtered = filtered.filter(course => course.price && parseFloat(course.price) > 0);
         }
 
         setFilteredCourses(filtered);
     };
 
+    // Manejar cambios de búsqueda
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
     };
 
+    // Limpiar todos los filtros
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedCategory('');
@@ -161,162 +165,231 @@ const ExploreCourses = () => {
         setPriceFilter('');
     };
 
+    // Recargar datos
+    const handleRefresh = () => {
+        loadInitialData();
+    };
+
+    // Funciones helper para formateo
     const formatPrice = (price) => {
-        if (!price || price === 0) return 'Gratis';
-        return `$${price.toLocaleString()}`;
+        const numPrice = parseFloat(price || 0);
+        if (numPrice === 0) return 'Gratis';
+        return `$${numPrice.toLocaleString()}`;
     };
 
     const formatDuration = (duration) => {
         if (!duration) return '';
-        return `${duration} horas`;
+        return `${duration}h`;
     };
 
     const getDifficultyLabel = (difficulty) => {
         if (!difficulty) return '';
         const diff = difficulty.toLowerCase();
-        if (diff === 'beginner' || diff === 'básico') return 'Principiante';
-        if (diff === 'intermediate' || diff === 'intermedio') return 'Intermedio';  
-        if (diff === 'advanced' || diff === 'avanzado') return 'Avanzado';
+        if (diff.includes('beginner') || diff.includes('básico')) return 'Principiante';
+        if (diff.includes('intermediate') || diff.includes('intermedio')) return 'Intermedio';  
+        if (diff.includes('advanced') || diff.includes('avanzado')) return 'Avanzado';
         return difficulty;
     };
 
     const getDifficultyStyle = (difficulty) => {
-        if (!difficulty) return '';
+        if (!difficulty) return 'text-gray-600 bg-gray-100';
         const diff = difficulty.toLowerCase();
-        if (diff === 'beginner' || diff === 'básico') return 'text-green-600 bg-green-100';
-        if (diff === 'intermediate' || diff === 'intermedio') return 'text-yellow-600 bg-yellow-100';
-        if (diff === 'advanced' || diff === 'avanzado') return 'text-red-600 bg-red-100';
+        if (diff.includes('beginner') || diff.includes('básico')) return 'text-green-600 bg-green-100';
+        if (diff.includes('intermediate') || diff.includes('intermedio')) return 'text-yellow-600 bg-yellow-100';
+        if (diff.includes('advanced') || diff.includes('avanzado')) return 'text-red-600 bg-red-100';
         return 'text-gray-600 bg-gray-100';
     };
 
-    const CourseCard = ({ course }) => (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            {/* Imagen del curso */}
-            <div className="aspect-video bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                {course.image_url ? (
-                    <img 
-                        src={course.image_url} 
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <BookOpen className="w-12 h-12 text-white opacity-80" />
-                )}
-            </div>
-
-            {/* Contenido de la tarjeta */}
-            <div className="p-6">
-                {/* Categoría y nivel */}
-                <div className="flex items-center justify-between mb-2">
-                    {course.category && (
-                        <span className="inline-block px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full">
-                            {course.category}
-                        </span>
-                    )}
-                    {(course.level || course.difficulty_level) && (
-                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                            getDifficultyStyle(course.level || course.difficulty_level)
-                        }`}>
-                            {getDifficultyLabel(course.level || course.difficulty_level)}
-                        </span>
+    // Componente de tarjeta de curso mejorado
+    const CourseCard = ({ course }) => {
+        const isRequesting = requestingCourses.has(course.id);
+        const hasValidThumbnail = course.thumbnail && course.thumbnail.trim() && course.thumbnail !== 'null';
+        
+        // Determinar acción según enrollment_status
+        const getActionButton = () => {
+            if (user?.role !== 'student') return null;
+            
+            switch (course.enrollment_status) {
+                case 'enrolled':
+                    return (
+                        <button
+                            onClick={() => navigate(`/cursos/${course.id}/learn`)}
+                            className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        >
+                            <Play className="w-4 h-4" />
+                            <span>Continuar</span>
+                        </button>
+                    );
+                case 'pending':
+                    return (
+                        <div className="flex-1 flex items-center justify-center px-3 py-2 bg-orange-100 text-orange-800 rounded-lg text-sm">
+                            <Clock className="w-4 h-4 mr-1" />
+                            <span>Pendiente</span>
+                        </div>
+                    );
+                case 'not_enrolled':
+                default:
+                    return (
+                        <button
+                            onClick={() => handleRequestEnrollment(course.id)}
+                            disabled={isRequesting}
+                            className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        >
+                            {isRequesting ? (
+                                <>
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                    <span>Solicitando...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <BookOpen className="w-4 h-4" />
+                                    <span>Solicitar</span>
+                                </>
+                            )}
+                        </button>
+                    );
+            }
+        };
+        
+        return (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+                {/* Imagen del curso */}
+                <div className="aspect-video bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center relative">
+                    {hasValidThumbnail ? (
+                        <img 
+                            src={course.thumbnail} 
+                            alt={course.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                            }}
+                        />
+                    ) : null}
+                    <div className="absolute inset-0 flex items-center justify-center" style={{display: hasValidThumbnail ? 'none' : 'flex'}}>
+                        <BookOpen className="w-12 h-12 text-white opacity-80" />
+                    </div>
+                    
+                    {/* Badge de progreso para cursos inscritos */}
+                    {course.enrollment_status === 'enrolled' && course.my_progress && parseFloat(course.my_progress) > 0 && (
+                        <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs">
+                            {parseFloat(course.my_progress)}%
+                        </div>
                     )}
                 </div>
 
-                {/* Título */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {course.title}
-                </h3>
+                {/* Contenido */}
+                <div className="p-4">
+                    {/* Meta información */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                            {course.category && (
+                                <span className="px-2 py-1 text-xs font-medium text-primary-600 bg-primary-100 rounded-full">
+                                    {course.category}
+                                </span>
+                            )}
+                            {(course.level || course.difficulty_level) && (
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    getDifficultyStyle(course.level || course.difficulty_level)
+                                }`}>
+                                    {getDifficultyLabel(course.level || course.difficulty_level)}
+                                </span>
+                            )}
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">
+                            {formatPrice(course.price)}
+                        </div>
+                    </div>
 
-                {/* Descripción */}
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {course.description}
-                </p>
+                    {/* Título */}
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
+                        {course.title}
+                    </h3>
 
-                {/* Instructor */}
-                <div className="flex items-center mb-4">
-                    <User className="w-4 h-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">
-                        {course.instructor_name || 'Instructor'}
-                    </span>
-                </div>
+                    {/* Descripción */}
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 min-h-[2.5rem]">
+                        {course.description}
+                    </p>
 
-                {/* Estadísticas */}
-                <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
-                    <div className="flex items-center space-x-4">
+                    {/* Instructor */}
+                    <div className="flex items-center mb-3">
+                        <User className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600 truncate">
+                            {course.instructor_name || 'Instructor'}
+                        </span>
+                    </div>
+
+                    {/* Estadísticas */}
+                    <div className="flex items-center justify-between mb-4 text-xs text-gray-500">
                         {(course.duration || course.duration_hours) && (
                             <span className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1" />
+                                <Clock className="w-3 h-3 mr-1" />
                                 {formatDuration(course.duration || course.duration_hours)}
                             </span>
                         )}
                         <span className="flex items-center">
-                            <Users className="w-4 h-4 mr-1" />
+                            <Users className="w-3 h-3 mr-1" />
                             {course.enrolled_count || 0}
                         </span>
                         <span className="flex items-center">
-                            <Play className="w-4 h-4 mr-1" />
-                            {course.modules_count || 0} módulos
+                            <Play className="w-3 h-3 mr-1" />
+                            {course.modules_count || 0}
                         </span>
                     </div>
-                </div>
 
-                {/* Precio y acción */}
-                <div className="flex items-center justify-between">
-                    <div className="text-lg font-bold text-gray-900">
-                        {formatPrice(course.price)}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        {/* Botón de inscripción solo para estudiantes */}
-                        {user?.role === 'student' && (
-                            <>
-                                {enrolledCourses.has(course.id) ? (
-                                    <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg">
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span className="text-sm font-medium">Inscrito</span>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => handleEnrollInCourse(course.id)}
-                                        disabled={enrollingCourses.has(course.id)}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {enrollingCourses.has(course.id) ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                <span className="text-sm">Inscribiendo...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <BookOpen className="w-4 h-4" />
-                                                <span className="text-sm">Inscribirse</span>
-                                            </>
-                                        )}
-                                    </button>
-                                )}
-                            </>
-                        )}
+                    {/* Badge de estado para estudiantes */}
+                    {user?.role === 'student' && course.enrollment_status !== 'not_enrolled' && (
+                        <div className="mb-3">
+                            <EnrollmentBadge status={course.enrollment_status} />
+                        </div>
+                    )}
+
+                    {/* Acciones */}
+                    <div className="flex gap-2">
+                        {/* Botón de acción contextual para estudiantes */}
+                        {getActionButton()}
                         
-                        {/* Botón ver curso */}
+                        {/* Botón ver detalles */}
                         <button
                             onClick={() => navigate(`/cursos/${course.id}`)}
-                            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className={`${user?.role === 'student' ? 'flex-1' : 'w-full'} flex items-center justify-center space-x-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm`}
                         >
-                            <span>Ver curso</span>
+                            <span>Ver detalles</span>
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
+    // Estados de carga y error
     if (loading) {
         return (
             <DashboardLayout>
                 <div className="flex items-center justify-center min-h-96">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <RefreshCw className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-4" />
                         <p className="text-gray-600">Cargando cursos...</p>
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    if (error) {
+        return (
+            <DashboardLayout>
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="text-center">
+                        <div className="text-red-500 text-4xl mb-4">⚠️</div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">{error}</h3>
+                        <button
+                            onClick={handleRefresh}
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                            Reintentar
+                        </button>
                     </div>
                 </div>
             </DashboardLayout>
@@ -325,18 +398,29 @@ const ExploreCourses = () => {
 
     return (
         <DashboardLayout>
-            {/* Header */}
+            {/* Header con stats */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    Explorar Cursos
-                </h1>
-                <p className="text-gray-600">
-                    Descubre nuevos cursos y amplía tus conocimientos en agricultura y desarrollo agropecuario
-                </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            Explorar Cursos
+                        </h1>
+                        <p className="text-gray-600">
+                            Descubre nuevos cursos y amplía tus conocimientos
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleRefresh}
+                        className="flex items-center space-x-2 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        <span>Actualizar</span>
+                    </button>
+                </div>
             </div>
 
             {/* Barra de búsqueda y filtros */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Búsqueda */}
                     <div className="flex-1">
@@ -347,25 +431,40 @@ const ExploreCourses = () => {
                                 placeholder="Buscar cursos, instructores o temas..."
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
                         </div>
                     </div>
 
-                    {/* Botón de filtros */}
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className="flex items-center space-x-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        <Filter className="w-5 h-5" />
-                        <span>Filtros</span>
-                    </button>
+                    {/* Botones de acción */}
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`flex items-center space-x-2 px-4 py-3 border rounded-lg transition-colors ${
+                                showFilters 
+                                    ? 'bg-primary-50 border-primary-200 text-primary-700' 
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                            <Filter className="w-4 h-4" />
+                            <span>Filtros</span>
+                        </button>
+                        
+                        {(searchQuery || selectedCategory || selectedLevel || priceFilter) && (
+                            <button
+                                onClick={clearFilters}
+                                className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                            >
+                                Limpiar
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Panel de filtros expandible */}
                 {showFilters && (
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="mt-6 pt-6 border-t border-gray-200 animate-in fade-in duration-200">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Filtro por categoría */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -374,7 +473,7 @@ const ExploreCourses = () => {
                                 <select
                                     value={selectedCategory}
                                     onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="">Todas las categorías</option>
                                     {categories.map((category) => (
@@ -393,7 +492,7 @@ const ExploreCourses = () => {
                                 <select
                                     value={selectedLevel}
                                     onChange={(e) => setSelectedLevel(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="">Todos los niveles</option>
                                     <option value="beginner">Principiante</option>
@@ -410,62 +509,86 @@ const ExploreCourses = () => {
                                 <select
                                     value={priceFilter}
                                     onChange={(e) => setPriceFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="">Todos los precios</option>
                                     <option value="free">Gratis</option>
                                     <option value="paid">De pago</option>
                                 </select>
                             </div>
-
-                            {/* Botón limpiar filtros */}
-                            <div className="flex items-end">
-                                <button
-                                    onClick={clearFilters}
-                                    className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    Limpiar filtros
-                                </button>
-                            </div>
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Resultados */}
+            {/* Resultados y stats */}
             <div className="mb-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">
-                        {searchQuery ? `Resultados para "${searchQuery}"` : 'Todos los cursos'}
+                        {searchQuery ? `"${searchQuery}"` : 'Cursos disponibles'}
                     </h2>
-                    <span className="text-gray-600">
-                        {filteredCourses.length} curso{filteredCourses.length !== 1 ? 's' : ''} encontrado{filteredCourses.length !== 1 ? 's' : ''}
-                    </span>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <span>
+                            {filteredCourses.length} de {courses.length} cursos
+                        </span>
+                        {user?.role === 'student' && (
+                            <span className="text-primary-600">
+                                {courses.filter(c => c.enrollment_status === 'enrolled' || c.enrollment_status === 'pending').length} inscripciones
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Grid de cursos */}
             {filteredCourses.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredCourses.map((course) => (
                         <CourseCard key={course.id} course={course} />
                     ))}
                 </div>
-            ) : (
-                <div className="text-center py-12">
+            ) : courses.length === 0 ? (
+                <div className="text-center py-16">
                     <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No hay cursos disponibles
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                        Aún no se han publicado cursos en la plataforma
+                    </p>
+                    <button
+                        onClick={handleRefresh}
+                        className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    >
+                        Actualizar
+                    </button>
+                </div>
+            ) : (
+                <div className="text-center py-16">
+                    <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                         No se encontraron cursos
                     </h3>
                     <p className="text-gray-600 mb-6">
-                        Intenta ajustar tus filtros o buscar otros términos
+                        {searchQuery 
+                            ? `No hay cursos que coincidan con "${searchQuery}"`
+                            : 'Intenta ajustar tus filtros para ver más cursos'
+                        }
                     </p>
-                    <button
-                        onClick={clearFilters}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Ver todos los cursos
-                    </button>
+                    <div className="flex justify-center space-x-4">
+                        <button
+                            onClick={clearFilters}
+                            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                            Limpiar filtros
+                        </button>
+                        <button
+                            onClick={() => navigate('/mis-cursos')}
+                            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Ver mis cursos
+                        </button>
+                    </div>
                 </div>
             )}
         </DashboardLayout>

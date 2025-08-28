@@ -14,6 +14,7 @@ import CourseDetailPage from './pages/CourseDetailPage';
 import CoursePlayerPage from './pages/CoursePlayerPage';
 import MyCourses from './pages/MyCourses';
 import ExploreCourses from './pages/ExploreCourses';
+import EnrollmentManagement from './pages/EnrollmentManagement';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
@@ -122,6 +123,14 @@ function App() {
                     element={
                         <ProtectedRoute requiredRole="admin">
                             <ComingSoon />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/inscripciones"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <EnrollmentManagement />
                         </ProtectedRoute>
                     }
                 />

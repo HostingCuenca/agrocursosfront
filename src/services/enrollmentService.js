@@ -1,17 +1,19 @@
 import api from './authService';
 
 export const enrollmentService = {
-    // Obtener inscripciones de un estudiante (desde el dashboard)
-    getStudentEnrollments: async (studentId) => {
+    // Obtener inscripciones de un estudiante
+    getStudentEnrollments: async (studentId, params = {}) => {
         try {
-            const response = await api.get(`/progress/dashboard/${studentId}`);
-            // El dashboard devuelve recent_courses que son las inscripciones
-            if (response.data.success && response.data.dashboard?.recent_courses) {
-                return {
-                    success: true,
-                    enrollments: response.data.dashboard.recent_courses
-                };
-            }
+            const queryParams = new URLSearchParams();
+            if (params.status) queryParams.append('status', params.status);
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            
+            const url = `/enrollments/students/${studentId}/enrollments${
+                queryParams.toString() ? '?' + queryParams.toString() : ''
+            }`;
+            
+            const response = await api.get(url);
             return response.data;
         } catch (error) {
             console.error('Get student enrollments error:', error);
@@ -20,9 +22,18 @@ export const enrollmentService = {
     },
 
     // Obtener inscripciones de un curso (instructor/admin)
-    getCourseEnrollments: async (courseId) => {
+    getCourseEnrollments: async (courseId, params = {}) => {
         try {
-            const response = await api.get(`/courses/${courseId}/enrollments`);
+            const queryParams = new URLSearchParams();
+            if (params.status) queryParams.append('status', params.status);
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            
+            const url = `/enrollments/courses/${courseId}/enrollments${
+                queryParams.toString() ? '?' + queryParams.toString() : ''
+            }`;
+            
+            const response = await api.get(url);
             return response.data;
         } catch (error) {
             console.error('Get course enrollments error:', error);
@@ -30,13 +41,35 @@ export const enrollmentService = {
         }
     },
 
-    // Inscribirse en un curso
-    enrollInCourse: async (courseId, enrollmentData = {}) => {
+    // Solicitar inscripción en un curso (será estado pending)
+    requestEnrollment: async (courseId, enrollmentData = {}) => {
         try {
             const response = await api.post(`/enrollments/courses/${courseId}/enroll`, enrollmentData);
             return response.data;
         } catch (error) {
-            console.error('Enroll in course error:', error);
+            console.error('Request enrollment error:', error);
+            throw error;
+        }
+    },
+
+    // Aprobar inscripción (instructor/admin)
+    approveEnrollment: async (enrollmentId) => {
+        try {
+            const response = await api.post(`/enrollments/${enrollmentId}/approve`, {});
+            return response.data;
+        } catch (error) {
+            console.error('Approve enrollment error:', error);
+            throw error;
+        }
+    },
+
+    // Rechazar inscripción (instructor/admin)
+    rejectEnrollment: async (enrollmentId, reason = '') => {
+        try {
+            const response = await api.post(`/enrollments/${enrollmentId}/reject`, { reason });
+            return response.data;
+        } catch (error) {
+            console.error('Reject enrollment error:', error);
             throw error;
         }
     },

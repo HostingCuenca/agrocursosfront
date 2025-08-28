@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import { BookOpen, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { BookOpen, Mail, Lock, Eye, EyeOff, User, GraduationCap, Shield } from 'lucide-react';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -28,6 +28,16 @@ const Login = () => {
         } catch (error) {
             console.error('Login failed:', error);
         }
+    };
+
+    // Función para rellenar credenciales rápidamente
+    const fillCredentials = (role) => {
+        const credentials = {
+            student: { email: 'test@test.com', password: '123456' },
+            instructor: { email: 'instructor@test.com', password: '123456' },
+            admin: { email: 'admin@test.com', password: '123456' }
+        };
+        setFormData(credentials[role]);
     };
 
     return (
@@ -103,6 +113,62 @@ const Login = () => {
                             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                         </button>
                     </form>
+
+                    {/* Credenciales de prueba */}
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">
+                            Credenciales de Prueba
+                        </h3>
+                        <div className="grid grid-cols-1 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => fillCredentials('student')}
+                                className="flex items-center justify-between p-2 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors text-left"
+                            >
+                                <div className="flex items-center">
+                                    <User className="w-4 h-4 text-blue-600 mr-2" />
+                                    <div>
+                                        <div className="text-xs font-medium text-gray-900">Estudiante</div>
+                                        <div className="text-xs text-gray-600">6 inscripciones (5 enrolled, 1 pending)</div>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-blue-600 font-mono">test@test.com</div>
+                            </button>
+                            
+                            <button
+                                type="button"
+                                onClick={() => fillCredentials('instructor')}
+                                className="flex items-center justify-between p-2 bg-green-50 hover:bg-green-100 rounded-md transition-colors text-left"
+                            >
+                                <div className="flex items-center">
+                                    <GraduationCap className="w-4 h-4 text-green-600 mr-2" />
+                                    <div>
+                                        <div className="text-xs font-medium text-gray-900">Instructor</div>
+                                        <div className="text-xs text-gray-600">Crear cursos, aprobar inscripciones</div>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-green-600 font-mono">instructor@test.com</div>
+                            </button>
+                            
+                            <button
+                                type="button"
+                                onClick={() => fillCredentials('admin')}
+                                className="flex items-center justify-between p-2 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors text-left"
+                            >
+                                <div className="flex items-center">
+                                    <Shield className="w-4 h-4 text-purple-600 mr-2" />
+                                    <div>
+                                        <div className="text-xs font-medium text-gray-900">Administrador</div>
+                                        <div className="text-xs text-gray-600">Todos los permisos del sistema</div>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-purple-600 font-mono">admin@test.com</div>
+                            </button>
+                        </div>
+                        <div className="text-xs text-gray-500 text-center mt-2">
+                            Contraseña para todos: <span className="font-mono">123456</span>
+                        </div>
+                    </div>
 
                     {/* Footer */}
                     <div className="mt-6 text-center space-y-2">

@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import CourseContent from '../components/modules/CourseContent';
+import EnrollmentStatus from '../components/EnrollmentStatus';
+import { enrollmentService } from '../services/enrollmentService';
+import { courseService } from '../services/courseService';
 import useCourseStore from '../store/courseStore';
 import useRolePermissions from '../hooks/useRolePermissions';
 import useAuthStore from '../store/authStore';
@@ -31,17 +34,19 @@ const CourseDetailPage = () => {
         loading,
         error,
         getCourseById,
-        enrollInCourse,
         clearCurrentCourse,
         clearError
     } = useCourseStore();
 
     const [enrolling, setEnrolling] = useState(false);
     const [showEnrollModal, setShowEnrollModal] = useState(false);
+    const [userEnrollment, setUserEnrollment] = useState(null);
+    const [loadingEnrollment, setLoadingEnrollment] = useState(false);
 
     useEffect(() => {
         if (id) {
             getCourseById(id);
+            loadUserEnrollment();
         }
         
         return () => {
@@ -49,9 +54,26 @@ const CourseDetailPage = () => {
         };
     }, [id, getCourseById, clearCurrentCourse]);
 
+    // Cargar estado de inscripción del usuario
+    const loadUserEnrollment = async () => {
+        if (!user?.id || !id) return;
+        
+        setLoadingEnrollment(true);
+        try {
+            const response = await enrollmentService.getStudentEnrollments(user.id);
+            const enrollment = response.enrollments?.find(e => e.course_id === id);
+            setUserEnrollment(enrollment || null);
+        } catch (error) {
+            console.error('Error loading user enrollment:', error);
+            setUserEnrollment(null);
+        } finally {
+            setLoadingEnrollment(false);
+        }
+    };
+
     const canManageThisCourse = currentCourse && permissions.courses.canEdit(currentCourse.instructor_id);
 
-    const handleEnroll = async () => {
+    const handleRequestEnrollment = async () => {
         if (!permissions.courses.canEnroll) {
             alert('No tienes permisos para inscribirte en cursos');
             return;
@@ -59,23 +81,26 @@ const CourseDetailPage = () => {
 
         setEnrolling(true);
         try {
-            const coursePrice = parseFloat(currentCourse.price) || 0;
-            await enrollInCourse(currentCourse.id, {
-                payment_status: coursePrice === 0 ? 'free' : 'pending',
-                payment_amount: coursePrice
-            });
+            const response = await enrollmentService.requestEnrollment(currentCourse.id);
             
-            alert('¡Te has inscrito exitosamente en el curso!');
-            setShowEnrollModal(false);
-            
-            // Recargar el curso para mostrar el estado actualizado
-            getCourseById(id);
+            if (response.success) {
+                alert(response.message || 'Solicitud de inscripción enviada. Esperando aprobación del instructor.');
+                setShowEnrollModal(false);
+                
+                // Recargar el estado de inscripción
+                await loadUserEnrollment();
+            }
         } catch (error) {
-            console.error('Error al inscribirse:', error);
-            alert(error.response?.data?.message || 'Error al inscribirse en el curso');
+            console.error('Error al solicitar inscripción:', error);
+            const errorMessage = error.response?.data?.error || error.message || 'Error al solicitar inscripción';
+            alert(errorMessage);
         } finally {
             setEnrolling(false);
         }
+    };
+
+    const canAccessCourse = () => {
+        return userEnrollment?.status === 'enrolled' || userEnrollment?.status === 'completed';
     };
 
     const getDifficultyColor = (level) => {
@@ -193,18 +218,13 @@ const CourseDetailPage = () => {
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(currentCourse.difficulty_level)}`}>
                                     {getDifficultyText(currentCourse.difficulty_level)}
                                 </span>
-                                {currentCourse.enrollment_status && (
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                        currentCourse.enrollment_status === 'active' 
-                                            ? 'bg-green-100 text-green-800' 
-                                            : currentCourse.enrollment_status === 'completed'
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                        {currentCourse.enrollment_status === 'active' && 'Inscrito'}
-                                        {currentCourse.enrollment_status === 'completed' && 'Completado'}
-                                        {currentCourse.enrollment_status === 'pending' && 'Pendiente'}
-                                    </span>
+                                {userEnrollment && (
+                                    <EnrollmentStatus 
+                                        status={userEnrollment.status}
+                                        metadata={userEnrollment.metadata}
+                                        size="sm"
+                                        showReason={false}
+                                    />
                                 )}
                             </div>
 
@@ -228,18 +248,35 @@ const CourseDetailPage = () => {
                             )}
 
                             {/* Progreso si está inscrito */}
-                            {currentCourse.progress_percentage !== undefined && (
+                            {canAccessCourse() && userEnrollment?.progress_percentage !== undefined && (
                                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                                     <div className="flex justify-between items-center mb-2">
                                         <span className="font-medium text-gray-700">Tu progreso</span>
-                                        <span className="text-sm text-gray-600">{currentCourse.progress_percentage}%</span>
+                                        <span className="text-sm text-gray-600">{parseFloat(userEnrollment.progress_percentage || 0)}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-3">
                                         <div
                                             className="bg-primary-600 h-3 rounded-full transition-all duration-300"
-                                            style={{ width: `${currentCourse.progress_percentage}%` }}
+                                            style={{ width: `${parseFloat(userEnrollment.progress_percentage || 0)}%` }}
                                         />
                                     </div>
+                                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                        <span>Inscrito: {new Date(userEnrollment.enrollment_date).toLocaleDateString()}</span>
+                                        <span>{userEnrollment.completed_classes || 0} clases completadas</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Mostrar razón de rechazo si aplica */}
+                            {userEnrollment?.status === 'rejected' && userEnrollment?.metadata?.rejection_reason && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                    <h4 className="font-medium text-red-800 mb-2">Solicitud rechazada</h4>
+                                    <p className="text-sm text-red-700">
+                                        <strong>Razón:</strong> {userEnrollment.metadata.rejection_reason}
+                                    </p>
+                                    <p className="text-xs text-red-600 mt-2">
+                                        Puedes solicitar inscripción nuevamente si lo deseas.
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -247,7 +284,7 @@ const CourseDetailPage = () => {
                         {/* Contenido del curso */}
                         <CourseContent 
                             courseId={id} 
-                            isEnrolled={!!currentCourse.enrollment_status}
+                            isEnrolled={canAccessCourse()}
                         />
 
                         {/* Descripción detallada */}
@@ -275,27 +312,46 @@ const CourseDetailPage = () => {
                             </div>
 
                             {/* Botón de acción principal */}
-                            {!currentCourse.enrollment_status && permissions.courses.canEnroll ? (
+                            {loadingEnrollment ? (
+                                <div className="w-full py-3 px-4 rounded-lg bg-gray-100 text-center mb-4">
+                                    <span className="text-gray-600">Cargando estado...</span>
+                                </div>
+                            ) : !userEnrollment && permissions.courses.canEnroll ? (
                                 <button
                                     onClick={() => setShowEnrollModal(true)}
                                     disabled={enrolling}
                                     className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-medium mb-4"
                                 >
-                                    {enrolling ? 'Inscribiendo...' : 'Inscribirse Ahora'}
+                                    {enrolling ? 'Enviando solicitud...' : 'Solicitar Inscripción'}
                                 </button>
-                            ) : currentCourse.enrollment_status === 'active' ? (
+                            ) : userEnrollment?.status === 'pending' ? (
+                                <div className="w-full py-3 px-4 rounded-lg bg-orange-100 text-center mb-4">
+                                    <span className="text-orange-800 font-medium">Esperando aprobación</span>
+                                    <p className="text-xs text-orange-600 mt-1">
+                                        El instructor revisará tu solicitud pronto
+                                    </p>
+                                </div>
+                            ) : userEnrollment?.status === 'enrolled' ? (
                                 <button
                                     onClick={() => navigate(`/cursos/${id}/learn`)}
                                     className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium mb-4"
                                 >
                                     Continuar Aprendiendo
                                 </button>
-                            ) : currentCourse.enrollment_status === 'completed' ? (
+                            ) : userEnrollment?.status === 'completed' ? (
                                 <button
                                     onClick={() => navigate(`/cursos/${id}/certificate`)}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium mb-4"
                                 >
                                     Ver Certificado
+                                </button>
+                            ) : userEnrollment?.status === 'rejected' ? (
+                                <button
+                                    onClick={() => setShowEnrollModal(true)}
+                                    disabled={enrolling}
+                                    className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-medium mb-4"
+                                >
+                                    {enrolling ? 'Enviando solicitud...' : 'Volver a Solicitar'}
                                 </button>
                             ) : null}
 
@@ -374,7 +430,10 @@ const CourseDetailPage = () => {
                         <div className="bg-white rounded-lg max-w-md w-full p-6">
                             <h3 className="text-lg font-semibold mb-4">Confirmar Inscripción</h3>
                             <p className="text-gray-600 mb-6">
-                                ¿Estás seguro de que quieres inscribirte en el curso "{currentCourse.title}"?
+                                ¿Estás seguro de que quieres solicitar inscripción en el curso "{currentCourse.title}"?
+                                <span className="block mt-2 text-sm text-orange-600">
+                                    Tu solicitud será enviada al instructor para su aprobación.
+                                </span>
                                 {(currentCourse.price && currentCourse.price > 0) && (
                                     <span className="block mt-2 font-medium">
                                         Costo: {formatPrice(currentCourse.price || 0)}
@@ -389,11 +448,11 @@ const CourseDetailPage = () => {
                                     Cancelar
                                 </button>
                                 <button
-                                    onClick={handleEnroll}
+                                    onClick={handleRequestEnrollment}
                                     disabled={enrolling}
                                     className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white py-2 px-4 rounded-lg"
                                 >
-                                    {enrolling ? 'Inscribiendo...' : 'Confirmar'}
+                                    {enrolling ? 'Enviando...' : 'Solicitar Inscripción'}
                                 </button>
                             </div>
                         </div>

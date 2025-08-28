@@ -1,36 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
 
 const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        detailed_description: '',
         category: '',
-        difficulty_level: 'beginner',
+        subcategory: '',
+        difficulty_level: 'Básico',
         price: 0,
+        currency: 'USD',
         duration_hours: 0,
-        thumbnail_url: '',
-        learning_objectives: [''],
+        language: 'es',
+        thumbnail: '',
+        tags: [],
         is_published: false
     });
 
     const [errors, setErrors] = useState({});
 
+    // Categorías según documentación
     const categories = [
-        'Agricultura',
-        'Ganadería', 
-        'Horticultura',
-        'Agroecología',
-        'Tecnología Agrícola',
-        'Comercialización',
-        'Sostenibilidad'
+        'agriculture',
+        'livestock',
+        'horticulture',
+        'agroecology',
+        'technology',
+        'marketing',
+        'sustainability'
     ];
 
-    const difficultyLevels = [
-        { value: 'beginner', label: 'Principiante' },
-        { value: 'intermediate', label: 'Intermedio' },
-        { value: 'advanced', label: 'Avanzado' }
+    const subcategories = {
+        agriculture: ['organic_farming', 'crop_management', 'soil_science', 'irrigation'],
+        livestock: ['cattle', 'poultry', 'sheep', 'pigs', 'animal_health'],
+        horticulture: ['vegetables', 'fruits', 'flowers', 'greenhouse'],
+        agroecology: ['permaculture', 'biodiversity', 'ecosystem_management'],
+        technology: ['precision_agriculture', 'drones', 'sensors', 'automation'],
+        marketing: ['sales', 'e_commerce', 'branding', 'market_analysis'],
+        sustainability: ['renewable_energy', 'waste_management', 'carbon_footprint']
+    };
+
+    const difficultyLevels = ['Básico', 'Intermedio', 'Avanzado'];
+    const currencies = ['USD', 'PEN', 'EUR'];
+    const languages = ['es', 'en', 'pt'];
+
+    // Enlaces de video reales según documentación
+    const exampleVideos = [
+        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        'https://www.youtube.com/watch?v=oHg5SJYRHA0',
+        'https://www.youtube.com/watch?v=9bZkp7q19f0',
+        'https://www.youtube.com/watch?v=2Vv-BfVoq4g',
+        'https://www.youtube.com/watch?v=astISOttCQ0'
     ];
 
     // Inicializar formulario con datos del curso si existe
@@ -39,16 +59,16 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
             setFormData({
                 title: course.title || '',
                 description: course.description || '',
-                detailed_description: course.detailed_description || '',
                 category: course.category || '',
-                difficulty_level: course.difficulty_level || 'beginner',
+                subcategory: course.subcategory || '',
+                difficulty_level: course.difficulty_level || 'Básico',
                 price: course.price || 0,
+                currency: course.currency || 'USD',
                 duration_hours: course.duration_hours || 0,
-                thumbnail_url: course.thumbnail_url || '',
-                learning_objectives: (Array.isArray(course.learning_objectives) && course.learning_objectives.length > 0)
-                    ? course.learning_objectives.filter(obj => obj && obj.trim())
-                    : [''],
-                is_published: Boolean(course.is_published) // Asegurar que sea boolean
+                language: course.language || 'es',
+                thumbnail: course.thumbnail || '',
+                tags: course.tags || [],
+                is_published: Boolean(course.is_published)
             });
         }
     }, [course]);
@@ -56,36 +76,37 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
     const validateForm = () => {
         const newErrors = {};
 
+        // Validaciones según documentación
         if (!formData.title.trim()) {
             newErrors.title = 'El título es requerido';
-        } else if (formData.title.length < 5) {
-            newErrors.title = 'El título debe tener al menos 5 caracteres';
+        } else if (formData.title.length < 3) {
+            newErrors.title = 'El título debe tener al menos 3 caracteres';
         }
 
         if (!formData.description.trim()) {
             newErrors.description = 'La descripción es requerida';
-        } else if (formData.description.length < 20) {
-            newErrors.description = 'La descripción debe tener al menos 20 caracteres';
-        }
-
-        if (!formData.category) {
-            newErrors.category = 'La categoría es requerida';
+        } else if (formData.description.length < 10) {
+            newErrors.description = 'La descripción debe tener al menos 10 caracteres';
         }
 
         if (formData.price < 0) {
             newErrors.price = 'El precio no puede ser negativo';
         }
 
-        if (formData.duration_hours <= 0) {
-            newErrors.duration_hours = 'La duración debe ser mayor a 0';
+        if (formData.duration_hours < 0) {
+            newErrors.duration_hours = 'La duración no puede ser negativa';
         }
 
-        // Validar objetivos de aprendizaje
-        const validObjectives = formData.learning_objectives
-            .filter(obj => obj && obj.trim && obj.trim())
-            .map(obj => obj.trim());
-        if (validObjectives.length === 0) {
-            newErrors.learning_objectives = 'Al menos un objetivo de aprendizaje es requerido';
+        if (!difficultyLevels.includes(formData.difficulty_level)) {
+            newErrors.difficulty_level = 'Nivel de dificultad inválido';
+        }
+
+        if (!currencies.includes(formData.currency)) {
+            newErrors.currency = 'Moneda inválida';
+        }
+
+        if (!languages.includes(formData.language)) {
+            newErrors.language = 'Idioma inválido';
         }
 
         setErrors(newErrors);
@@ -98,6 +119,14 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
             [field]: value
         }));
 
+        // Limpiar subcategoría si cambia la categoría
+        if (field === 'category') {
+            setFormData(prev => ({
+                ...prev,
+                subcategory: ''
+            }));
+        }
+
         // Limpiar error cuando el usuario empiece a escribir
         if (errors[field]) {
             setErrors(prev => ({
@@ -107,21 +136,15 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
         }
     };
 
-    const handleObjectiveChange = (index, value) => {
-        const newObjectives = [...formData.learning_objectives];
-        newObjectives[index] = value;
-        handleChange('learning_objectives', newObjectives);
-    };
-
-    const addObjective = () => {
-        handleChange('learning_objectives', [...formData.learning_objectives, '']);
-    };
-
-    const removeObjective = (index) => {
-        if (formData.learning_objectives.length > 1) {
-            const newObjectives = formData.learning_objectives.filter((_, i) => i !== index);
-            handleChange('learning_objectives', newObjectives);
+    const handleTagAdd = (tag) => {
+        if (tag.trim() && !formData.tags.includes(tag.trim())) {
+            handleChange('tags', [...formData.tags, tag.trim()]);
         }
+    };
+
+    const handleTagRemove = (index) => {
+        const newTags = formData.tags.filter((_, i) => i !== index);
+        handleChange('tags', newTags);
     };
 
     const handleSubmit = (e) => {
@@ -131,10 +154,9 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
             return;
         }
 
-        // Filtrar objetivos vacíos
+        // Preparar datos según documentación API
         const cleanedData = {
             ...formData,
-            learning_objectives: formData.learning_objectives.filter(obj => obj.trim()),
             price: parseFloat(formData.price),
             duration_hours: parseInt(formData.duration_hours)
         };
@@ -142,14 +164,42 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
         onSubmit(cleanedData);
     };
 
+    const fillExampleData = () => {
+        setFormData({
+            title: 'Cultivo Avanzado de Tomates Orgánicos',
+            description: 'Aprende todas las técnicas para cultivar tomates orgánicos de alta calidad en tu huerto. Desde la preparación del suelo hasta la cosecha.',
+            category: 'agriculture',
+            subcategory: 'organic_farming',
+            difficulty_level: 'Avanzado',
+            price: 99.99,
+            currency: 'USD',
+            duration_hours: 35,
+            language: 'es',
+            thumbnail: 'https://images.unsplash.com/photo-1592841200221-471592b6d231',
+            tags: ['agricultura', 'orgánico', 'tomates', 'cultivo'],
+            is_published: false
+        });
+    };
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        {course ? 'Editar Curso' : 'Crear Nuevo Curso'}
-                    </h2>
+                    <div className="flex items-center space-x-3">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            {course ? 'Editar Curso' : 'Crear Nuevo Curso'}
+                        </h2>
+                        {!course && (
+                            <button
+                                type="button"
+                                onClick={fillExampleData}
+                                className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                            >
+                                Usar ejemplo
+                            </button>
+                        )}
+                    </div>
                     <button
                         onClick={onCancel}
                         className="text-gray-400 hover:text-gray-600"
@@ -164,17 +214,17 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                         {/* Título */}
                         <div className="md:col-span-2">
                             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                                Título del Curso *
+                                Título del Curso * (min: 3 caracteres)
                             </label>
                             <input
                                 type="text"
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) => handleChange('title', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 ${
                                     errors.title ? 'border-red-300' : 'border-gray-300'
                                 }`}
-                                placeholder="Ej: Agricultura Orgánica para Principiantes"
+                                placeholder="Ej: Cultivo Avanzado de Tomates Orgánicos"
                             />
                             {errors.title && (
                                 <p className="text-red-500 text-sm mt-1">{errors.title}</p>
@@ -184,13 +234,13 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                         {/* Categoría */}
                         <div>
                             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                                Categoría *
+                                Categoría
                             </label>
                             <select
                                 id="category"
                                 value={formData.category}
                                 onChange={(e) => handleChange('category', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 ${
                                     errors.category ? 'border-red-300' : 'border-gray-300'
                                 }`}
                             >
@@ -206,6 +256,27 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                             )}
                         </div>
 
+                        {/* Subcategoría */}
+                        <div>
+                            <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-2">
+                                Subcategoría
+                            </label>
+                            <select
+                                id="subcategory"
+                                value={formData.subcategory}
+                                onChange={(e) => handleChange('subcategory', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                disabled={!formData.category}
+                            >
+                                <option value="">Seleccionar subcategoría</option>
+                                {formData.category && subcategories[formData.category]?.map((subcategory) => (
+                                    <option key={subcategory} value={subcategory}>
+                                        {subcategory}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* Nivel de dificultad */}
                         <div>
                             <label htmlFor="difficulty_level" className="block text-sm font-medium text-gray-700 mb-2">
@@ -215,11 +286,11 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                                 id="difficulty_level"
                                 value={formData.difficulty_level}
                                 onChange={(e) => handleChange('difficulty_level', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                             >
                                 {difficultyLevels.map((level) => (
-                                    <option key={level.value} value={level.value}>
-                                        {level.label}
+                                    <option key={level} value={level}>
+                                        {level}
                                     </option>
                                 ))}
                             </select>
@@ -228,20 +299,33 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                         {/* Precio */}
                         <div>
                             <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
-                                Precio (USD) *
+                                Precio * (min: 0)
                             </label>
-                            <input
-                                type="number"
-                                id="price"
-                                step="0.01"
-                                min="0"
-                                value={formData.price}
-                                onChange={(e) => handleChange('price', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
-                                    errors.price ? 'border-red-300' : 'border-gray-300'
-                                }`}
-                                placeholder="0.00"
-                            />
+                            <div className="flex space-x-2">
+                                <select
+                                    value={formData.currency}
+                                    onChange={(e) => handleChange('currency', e.target.value)}
+                                    className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                >
+                                    {currencies.map((currency) => (
+                                        <option key={currency} value={currency}>
+                                            {currency}
+                                        </option>
+                                    ))}
+                                </select>
+                                <input
+                                    type="number"
+                                    id="price"
+                                    step="0.01"
+                                    min="0"
+                                    value={formData.price}
+                                    onChange={(e) => handleChange('price', e.target.value)}
+                                    className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 ${
+                                        errors.price ? 'border-red-300' : 'border-gray-300'
+                                    }`}
+                                    placeholder="0.00"
+                                />
+                            </div>
                             {errors.price && (
                                 <p className="text-red-500 text-sm mt-1">{errors.price}</p>
                             )}
@@ -256,75 +340,77 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                             <input
                                 type="number"
                                 id="duration_hours"
-                                min="1"
+                                min="0"
                                 value={formData.duration_hours}
                                 onChange={(e) => handleChange('duration_hours', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 ${
                                     errors.duration_hours ? 'border-red-300' : 'border-gray-300'
                                 }`}
-                                placeholder="40"
+                                placeholder="35"
                             />
                             {errors.duration_hours && (
                                 <p className="text-red-500 text-sm mt-1">{errors.duration_hours}</p>
                             )}
                         </div>
+
+                        {/* Idioma */}
+                        <div>
+                            <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-2">
+                                Idioma *
+                            </label>
+                            <select
+                                id="language"
+                                value={formData.language}
+                                onChange={(e) => handleChange('language', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            >
+                                <option value="es">Español</option>
+                                <option value="en">Inglés</option>
+                                <option value="pt">Portugués</option>
+                            </select>
+                        </div>
                     </div>
 
-                    {/* Descripción corta */}
+                    {/* Descripción */}
                     <div>
                         <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                            Descripción Corta *
+                            Descripción * (min: 10 caracteres)
                         </label>
                         <textarea
                             id="description"
-                            rows={3}
+                            rows={4}
                             value={formData.description}
                             onChange={(e) => handleChange('description', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 ${
                                 errors.description ? 'border-red-300' : 'border-gray-300'
                             }`}
-                            placeholder="Breve descripción que aparecerá en la tarjeta del curso..."
+                            placeholder="Descripción completa del curso, metodología, objetivos de aprendizaje, etc..."
                         />
                         {errors.description && (
                             <p className="text-red-500 text-sm mt-1">{errors.description}</p>
                         )}
                         <p className="text-sm text-gray-500 mt-1">
-                            {formData.description.length}/200 caracteres
+                            {formData.description.length} caracteres
                         </p>
                     </div>
 
-                    {/* Descripción detallada */}
+                    {/* URL de imagen (thumbnail) */}
                     <div>
-                        <label htmlFor="detailed_description" className="block text-sm font-medium text-gray-700 mb-2">
-                            Descripción Detallada
-                        </label>
-                        <textarea
-                            id="detailed_description"
-                            rows={5}
-                            value={formData.detailed_description}
-                            onChange={(e) => handleChange('detailed_description', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            placeholder="Descripción completa del curso, metodología, requisitos, etc..."
-                        />
-                    </div>
-
-                    {/* URL de imagen */}
-                    <div>
-                        <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-2">
                             URL de Imagen del Curso
                         </label>
                         <input
                             type="url"
-                            id="thumbnail_url"
-                            value={formData.thumbnail_url}
-                            onChange={(e) => handleChange('thumbnail_url', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            placeholder="https://ejemplo.com/imagen.jpg"
+                            id="thumbnail"
+                            value={formData.thumbnail}
+                            onChange={(e) => handleChange('thumbnail', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            placeholder="https://images.unsplash.com/photo-1592841200221-471592b6d231"
                         />
-                        {formData.thumbnail_url && (
+                        {formData.thumbnail && (
                             <div className="mt-2">
                                 <img
-                                    src={formData.thumbnail_url}
+                                    src={formData.thumbnail}
                                     alt="Preview"
                                     className="h-32 w-48 object-cover rounded-lg border border-gray-300"
                                     onError={(e) => {
@@ -335,48 +421,42 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                         )}
                     </div>
 
-                    {/* Objetivos de aprendizaje */}
+                    {/* Tags */}
                     <div>
-                        <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-medium text-gray-700">
-                                Objetivos de Aprendizaje *
-                            </label>
-                            <button
-                                type="button"
-                                onClick={addObjective}
-                                className="text-primary-600 hover:text-primary-800 text-sm flex items-center"
-                            >
-                                <Plus className="w-4 h-4 mr-1" />
-                                Agregar objetivo
-                            </button>
-                        </div>
-                        
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Etiquetas (Tags)
+                        </label>
                         <div className="space-y-2">
-                            {formData.learning_objectives.map((objective, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                    <input
-                                        type="text"
-                                        value={objective}
-                                        onChange={(e) => handleObjectiveChange(index, e.target.value)}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                        placeholder="Ej: Comprender los principios básicos de la agricultura orgánica"
-                                    />
-                                    {formData.learning_objectives.length > 1 && (
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                {formData.tags.map((tag, index) => (
+                                    <span
+                                        key={index}
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                                    >
+                                        {tag}
                                         <button
                                             type="button"
-                                            onClick={() => removeObjective(index)}
-                                            className="text-red-500 hover:text-red-700"
+                                            onClick={() => handleTagRemove(index)}
+                                            className="ml-1 text-yellow-600 hover:text-yellow-800"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <X className="w-3 h-3" />
                                         </button>
-                                    )}
-                                </div>
-                            ))}
+                                    </span>
+                                ))}
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Agregar etiqueta (presiona Enter)"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleTagAdd(e.target.value);
+                                        e.target.value = '';
+                                    }
+                                }}
+                            />
                         </div>
-                        
-                        {errors.learning_objectives && (
-                            <p className="text-red-500 text-sm mt-1">{errors.learning_objectives}</p>
-                        )}
                     </div>
 
                     {/* Estado de publicación */}
@@ -387,7 +467,7 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                                 id="is_published"
                                 checked={Boolean(formData.is_published)}
                                 onChange={(e) => handleChange('is_published', e.target.checked)}
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
                             />
                             <label htmlFor="is_published" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
                                 Publicar curso (visible para estudiantes)
@@ -413,7 +493,7 @@ const CourseForm = ({ course, onSubmit, onCancel, loading = false }) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white rounded-lg transition-colors"
+                            className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-white rounded-lg transition-colors"
                         >
                             {loading ? 'Guardando...' : (course ? 'Actualizar Curso' : 'Crear Curso')}
                         </button>

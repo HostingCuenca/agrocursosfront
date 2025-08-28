@@ -11,8 +11,12 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     }
 
     // Si se requiere un rol específico y el usuario no lo tiene
-    if (requiredRole && user?.role !== requiredRole) {
-        return <Navigate to="/dashboard" replace />;
+    if (requiredRole) {
+        // Soportar múltiples roles (array) o rol único (string)
+        const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+        if (!allowedRoles.includes(user?.role)) {
+            return <Navigate to="/dashboard" replace />;
+        }
     }
 
     return children;

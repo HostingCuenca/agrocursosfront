@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Search, Filter, Grid, List } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import CourseCard from '../components/courses/CourseCard';
-import CourseFilters from '../components/courses/CourseFilters';
-import CourseForm from '../components/courses/CourseForm';
+import CourseModal from '../components/courses/CourseModal';
+import TestButton from '../components/courses/TestButton';
 import useCourseStore from '../store/courseStore';
 import useRolePermissions from '../hooks/useRolePermissions';
 import useAuthStore from '../store/authStore';
@@ -16,202 +16,143 @@ const CoursesPage = () => {
         loading,
         error,
         pagination,
-        filters,
         getCourses,
         getCourseById,
-        setFilters,
-        setPage,
-        enrollInCourse,
         createCourse,
         updateCourse,
         deleteCourse,
         clearError
     } = useCourseStore();
 
-    const [showCreateModal, setShowCreateModal] = useState(false);
+    // Estados del modal
+    const [showModal, setShowModal] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
-    const [loadingCourseDetails, setLoadingCourseDetails] = useState(false);
-    const [enrollingCourse, setEnrollingCourse] = useState(null);
+    const [modalLoading, setModalLoading] = useState(false);
+    
+    // Estados de filtros y vista
+    const [searchTerm, setSearchTerm] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
+    const [levelFilter, setLevelFilter] = useState('');
+    const [viewMode, setViewMode] = useState('grid');
+    
+    // Filtrar cursos localmente
+    const filteredCourses = courses.filter(course => {
+        const matchesSearch = !searchTerm || 
+            course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            course.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesCategory = !categoryFilter || course.category === categoryFilter;
+        const matchesLevel = !levelFilter || course.difficulty_level === levelFilter;
+        
+        return matchesSearch && matchesCategory && matchesLevel;
+    });
 
-    // Cargar cursos al montar el componente
+    // Categorías disponibles
+    const categories = {
+        'agriculture': 'Agricultura',
+        'livestock': 'Ganadería',
+        'horticulture': 'Horticultura',
+        'agroecology': 'Agroecología',
+        'technology': 'Tecnología',
+        'marketing': 'Comercialización',
+        'sustainability': 'Sostenibilidad'
+    };
+
+    const difficultyLevels = ['Básico', 'Intermedio', 'Avanzado'];
+
+    // Cargar cursos al montar
     useEffect(() => {
-        getCourses();
-    }, [getCourses]);
+        loadCourses();
+    }, []);
 
-    // Recargar cursos cuando cambien los filtros
-    useEffect(() => {
-        getCourses(filters);
-    }, [filters, getCourses]);
-
-    // Cambiar página
-    const handlePageChange = (newPage) => {
-        setPage(newPage);
-        getCourses({ ...filters, page: newPage });
-    };
-
-    // Actualizar filtros
-    const handleFiltersChange = (newFilters) => {
-        setFilters(newFilters);
-    };
-
-    // Limpiar filtros
-    const handleClearFilters = () => {
-        setFilters({ category: '', level: '', search: '', priceRange: '', duration: '', sortBy: 'created_at' });
-    };
-
-    // Manejar inscripción
-    const handleEnroll = async (course) => {
-        if (!permissions.courses.canEnroll) {
-            alert('No tienes permisos para inscribirte en cursos');
-            return;
-        }
-
-        setEnrollingCourse(course.id);
+    const loadCourses = async () => {
         try {
-            const coursePrice = parseFloat(course.price) || 0;
-            await enrollInCourse(course.id, {
-                payment_status: coursePrice === 0 ? 'free' : 'pending',
-                payment_amount: coursePrice
-            });
-            
-            // Mostrar mensaje de éxito
-            alert('¡Te has inscrito exitosamente en el curso!');
-            
-            // Recargar cursos para actualizar el estado
-            getCourses(filters);
+            // Llamar sin parámetros para obtener TODOS los cursos
+            await getCourses({});
         } catch (error) {
-            console.error('Error al inscribirse:', error);
-            alert(error.response?.data?.message || 'Error al inscribirse en el curso');
-        } finally {
-            setEnrollingCourse(null);
+            console.error('Error loading courses:', error);
         }
     };
 
-    // Crear curso
-    const handleCreateCourse = async (courseData) => {
-        try {
-            await createCourse(courseData);
-            setShowCreateModal(false);
-            alert('Curso creado exitosamente');
-        } catch (error) {
-            console.error('Error al crear curso:', error);
-            alert(error.response?.data?.message || 'Error al crear el curso');
-        }
+    // Crear nuevo curso
+    const handleCreateCourse = () => {
+        setEditingCourse(null);
+        setShowModal(true);
     };
 
-    // Manejar edición - obtener datos completos del curso
-    const handleEdit = async (course) => {
-        setLoadingCourseDetails(true);
+    // Editar curso existente
+    const handleEditCourse = async (course) => {
+        setModalLoading(true);
         try {
-            // Obtener datos completos del curso desde la API
+            // Intentar obtener datos completos del curso
             const fullCourseData = await getCourseById(course.id);
-            setEditingCourse(fullCourseData.course || fullCourseData);
+            setEditingCourse(fullCourseData.course || fullCourseData || course);
         } catch (error) {
             console.error('Error al obtener detalles del curso:', error);
-            // Si falla, usar los datos parciales disponibles
+            // Si falla, usar datos parciales
             setEditingCourse(course);
         } finally {
-            setLoadingCourseDetails(false);
+            setModalLoading(false);
+            setShowModal(true);
         }
     };
 
-    // Actualizar curso
-    const handleUpdateCourse = async (courseData) => {
+    // Guardar curso (crear o actualizar)
+    const handleSaveCourse = async (courseData) => {
+        setModalLoading(true);
         try {
-            await updateCourse(editingCourse.id, courseData);
+            if (editingCourse) {
+                // Actualizar curso existente
+                await updateCourse(editingCourse.id, courseData);
+            } else {
+                // Crear nuevo curso
+                await createCourse(courseData);
+            }
+            
+            setShowModal(false);
             setEditingCourse(null);
-            alert('Curso actualizado exitosamente');
+            
+            // Recargar cursos para ver cambios
+            await loadCourses();
+            
         } catch (error) {
-            console.error('Error al actualizar curso:', error);
-            alert(error.response?.data?.message || 'Error al actualizar el curso');
+            console.error('Error saving course:', error);
+            throw error; // Let the modal handle the error display
+        } finally {
+            setModalLoading(false);
         }
     };
 
-    // Manejar eliminación
-    const handleDelete = async (course) => {
+    // Eliminar curso
+    const handleDeleteCourse = async (course) => {
         if (window.confirm(`¿Estás seguro de que quieres eliminar el curso "${course.title}"?`)) {
             try {
                 await deleteCourse(course.id);
-                alert('Curso eliminado exitosamente');
+                await loadCourses(); // Recargar lista
             } catch (error) {
                 console.error('Error al eliminar curso:', error);
-                alert(error.response?.data?.message || 'Error al eliminar el curso');
             }
         }
     };
 
-    const renderPagination = () => {
-        if (pagination.totalPages <= 1) return null;
+    // Cerrar modal
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setEditingCourse(null);
+    };
 
-        const pages = [];
-        const maxPages = 5;
-        let startPage = Math.max(1, pagination.page - Math.floor(maxPages / 2));
-        let endPage = Math.min(pagination.totalPages, startPage + maxPages - 1);
-
-        if (endPage - startPage + 1 < maxPages) {
-            startPage = Math.max(1, endPage - maxPages + 1);
-        }
-
-        // Botón anterior
-        if (pagination.page > 1) {
-            pages.push(
-                <button
-                    key="prev"
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50"
-                >
-                    Anterior
-                </button>
-            );
-        }
-
-        // Páginas numeradas
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    className={`px-3 py-2 text-sm font-medium border ${
-                        i === pagination.page
-                            ? 'text-primary-600 bg-primary-50 border-primary-300'
-                            : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'
-                    }`}
-                >
-                    {i}
-                </button>
-            );
-        }
-
-        // Botón siguiente
-        if (pagination.page < pagination.totalPages) {
-            pages.push(
-                <button
-                    key="next"
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50"
-                >
-                    Siguiente
-                </button>
-            );
-        }
-
-        return (
-            <div className="flex items-center justify-between mt-8">
-                <div className="text-sm text-gray-700">
-                    Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
-                    {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
-                    {pagination.total} cursos
-                </div>
-                <div className="flex">{pages}</div>
-            </div>
-        );
+    // Limpiar filtros
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setCategoryFilter('');
+        setLevelFilter('');
     };
 
     return (
         <DashboardLayout>
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">
                             {permissions.isStudent ? 'Explorar Cursos' : 'Gestión de Cursos'}
@@ -219,30 +160,105 @@ const CoursesPage = () => {
                         <p className="text-gray-600 mt-1">
                             {permissions.isStudent 
                                 ? 'Descubre y explora nuestro catálogo de cursos'
-                                : 'Administra y gestiona los cursos de la plataforma'
+                                : `Administra y gestiona ${user?.role === 'instructor' ? 'tus' : 'todos los'} cursos`
                             }
                         </p>
                     </div>
 
-                    {permissions.courses.canCreate && (
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Crear Curso</span>
-                        </button>
-                    )}
+                    <div className="flex items-center space-x-3">
+                        {/* View Mode Toggle */}
+                        <div className="flex bg-gray-100 rounded-lg p-1">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-2 rounded-md transition-colors ${
+                                    viewMode === 'grid'
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <Grid className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-2 rounded-md transition-colors ${
+                                    viewMode === 'list'
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <List className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Create Course Button */}
+                        {permissions.courses.canCreate && (
+                            <button
+                                onClick={handleCreateCourse}
+                                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Crear Curso</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                {/* Filtros */}
-                <CourseFilters
-                    filters={filters}
-                    onFiltersChange={handleFiltersChange}
-                    onClearFilters={handleClearFilters}
-                />
+                {/* Filters */}
+                <div className="bg-white p-4 rounded-lg border shadow-sm">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                        {/* Search */}
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por título o descripción..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            />
+                        </div>
 
-                {/* Mensaje de error */}
+                        {/* Category Filter */}
+                        <div className="lg:w-48">
+                            <select
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            >
+                                <option value="">Todas las categorías</option>
+                                {Object.entries(categories).map(([key, label]) => (
+                                    <option key={key} value={key}>{label}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Level Filter */}
+                        <div className="lg:w-40">
+                            <select
+                                value={levelFilter}
+                                onChange={(e) => setLevelFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            >
+                                <option value="">Todos los niveles</option>
+                                {difficultyLevels.map(level => (
+                                    <option key={level} value={level}>{level}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Clear Filters */}
+                        {(searchTerm || categoryFilter || levelFilter) && (
+                            <button
+                                onClick={handleClearFilters}
+                                className="px-3 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Limpiar
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Error Message */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
                         <span>{error}</span>
@@ -255,87 +271,103 @@ const CoursesPage = () => {
                     </div>
                 )}
 
-                {/* Loading */}
+                {/* Loading State */}
                 {loading && (
                     <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
                     </div>
                 )}
 
-                {/* Lista de cursos */}
-                {!loading && courses.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {courses.map((course) => (
-                            <CourseCard
-                                key={course.id}
-                                course={course}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onEnroll={handleEnroll}
-                                showActions={true}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {/* Empty state */}
-                {!loading && courses.length === 0 && !error && (
-                    <div className="text-center py-12">
-                        <div className="text-gray-400 text-6xl mb-4">📚</div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            No se encontraron cursos
-                        </h3>
-                        <p className="text-gray-500 mb-6">
-                            {filters.search || filters.category || filters.level
-                                ? 'Intenta ajustar los filtros para ver más resultados'
-                                : 'Aún no hay cursos disponibles'}
-                        </p>
-                        {permissions.courses.canCreate && (
-                            <button
-                                onClick={() => setShowCreateModal(true)}
-                                className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg inline-flex items-center space-x-2"
-                            >
-                                <Plus className="w-5 h-5" />
-                                <span>Crear Primer Curso</span>
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Paginación */}
-                {!loading && courses.length > 0 && renderPagination()}
-
-                {/* Modal de creación de curso */}
-                {showCreateModal && (
-                    <CourseForm
-                        onSubmit={handleCreateCourse}
-                        onCancel={() => setShowCreateModal(false)}
-                        loading={loading}
-                    />
-                )}
-
-                {/* Modal de edición de curso */}
-                {(editingCourse || loadingCourseDetails) && (
+                {/* Course Content */}
+                {!loading && (
                     <>
-                        {loadingCourseDetails ? (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                                <div className="bg-white rounded-lg p-8">
-                                    <div className="flex items-center">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mr-4"></div>
-                                        <span className="text-lg">Cargando detalles del curso...</span>
-                                    </div>
-                                </div>
+                        {/* Results Summary */}
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-600">
+                                {filteredCourses.length === courses.length
+                                    ? `${courses.length} curso${courses.length !== 1 ? 's' : ''} encontrado${courses.length !== 1 ? 's' : ''}`
+                                    : `${filteredCourses.length} de ${courses.length} cursos mostrados`
+                                }
+                            </p>
+                        </div>
+
+                        {/* Courses Grid/List */}
+                        {filteredCourses.length > 0 ? (
+                            <div className={
+                                viewMode === 'grid'
+                                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                                    : "space-y-4"
+                            }>
+                                {filteredCourses.map((course) => (
+                                    <CourseCard
+                                        key={`${course.id}-${course.is_published}-${course.updated_at}`} // Force re-render
+                                        course={course}
+                                        onEdit={handleEditCourse}
+                                        onDelete={handleDeleteCourse}
+                                        showActions={permissions.courses.canEdit || permissions.courses.canDelete}
+                                        viewMode={viewMode}
+                                    />
+                                ))}
                             </div>
                         ) : (
-                            <CourseForm
-                                course={editingCourse}
-                                onSubmit={handleUpdateCourse}
-                                onCancel={() => setEditingCourse(null)}
-                                loading={loading}
-                            />
+                            /* Empty State */
+                            <div className="text-center py-12 bg-white rounded-lg border">
+                                <div className="text-gray-400 text-6xl mb-4">
+                                    {searchTerm || categoryFilter || levelFilter ? '🔍' : '📚'}
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                    {searchTerm || categoryFilter || levelFilter
+                                        ? 'No se encontraron cursos'
+                                        : 'No hay cursos disponibles'
+                                    }
+                                </h3>
+                                <p className="text-gray-500 mb-6">
+                                    {searchTerm || categoryFilter || levelFilter
+                                        ? 'Intenta ajustar los filtros para ver más resultados'
+                                        : 'Comienza creando tu primer curso'
+                                    }
+                                </p>
+                                
+                                {/* Action Buttons */}
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                                    {(searchTerm || categoryFilter || levelFilter) && (
+                                        <button
+                                            onClick={handleClearFilters}
+                                            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        >
+                                            Limpiar filtros
+                                        </button>
+                                    )}
+                                    
+                                    {permissions.courses.canCreate && (
+                                        <button
+                                            onClick={handleCreateCourse}
+                                            className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg inline-flex items-center space-x-2 transition-colors"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            <span>
+                                                {courses.length === 0 ? 'Crear primer curso' : 'Crear curso'}
+                                            </span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         )}
                     </>
                 )}
+
+                {/* Course Modal */}
+                <CourseModal
+                    key={`modal-${editingCourse?.id || 'new'}-${showModal}`} // Force modal re-render
+                    isOpen={showModal}
+                    onClose={handleCloseModal}
+                    course={editingCourse}
+                    onSave={handleSaveCourse}
+                    loading={modalLoading}
+                />
+
+                {/* Test Button - Solo para desarrollo */}
+                <TestButton />
             </div>
         </DashboardLayout>
     );
