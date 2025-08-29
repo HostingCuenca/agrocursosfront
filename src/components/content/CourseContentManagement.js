@@ -27,20 +27,15 @@ const CourseContentManagement = ({ course, onContentUpdate }) => {
         setError(null);
         try {
             console.log('Loading modules for course:', course.id);
-            const response = await moduleService.getCourseModules(course.id);
-            console.log('Raw response:', response);
-            
-            // Extract modules array from response
-            const modulesData = response.modules || response || [];
-            console.log('Extracted modules:', modulesData);
+            const modulesData = await moduleService.getCourseModules(course.id);
+            console.log('Modules data received:', modulesData);
             
             // Load classes for each module
             const modulesWithClasses = await Promise.all(
                 modulesData.map(async (module) => {
                     try {
-                        const classResponse = await classService.getModuleClasses(module.id);
-                        const classes = classResponse.classes || classResponse || [];
-                        return { ...module, classes: classes };
+                        const classes = await classService.getModuleClasses(module.id);
+                        return { ...module, classes: classes || [] };
                     } catch (error) {
                         console.error(`Error loading classes for module ${module.id}:`, error);
                         return { ...module, classes: [] };

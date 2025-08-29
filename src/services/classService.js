@@ -9,7 +9,15 @@ export const classService = {
 
             const response = await api.get(`/classes/modules/${moduleId}/classes`);
             console.log('✅ Classes fetched:', response.data);
-            return response.data;
+            
+            // Handle different response formats
+            if (response.data.classes) {
+                return response.data.classes; // Return just the classes array
+            } else if (Array.isArray(response.data)) {
+                return response.data; // Already an array
+            } else {
+                return []; // Default empty array
+            }
         } catch (error) {
             console.error('❌ Get module classes error:', error);
             throw error;

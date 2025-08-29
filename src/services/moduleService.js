@@ -9,7 +9,15 @@ export const moduleService = {
 
             const response = await api.get(`/modules/courses/${courseId}/modules`);
             console.log('✅ Modules fetched:', response.data);
-            return response.data;
+            
+            // Handle different response formats
+            if (response.data.modules) {
+                return response.data.modules; // Return just the modules array
+            } else if (Array.isArray(response.data)) {
+                return response.data; // Already an array
+            } else {
+                return []; // Default empty array
+            }
         } catch (error) {
             console.error('❌ Get course modules error:', error);
             throw error;
