@@ -45,12 +45,8 @@ const EnrollmentManagement = () => {
     useEffect(() => {
         const loadCourses = async () => {
             try {
-                let coursesData;
-                if (user?.role === 'admin') {
-                    coursesData = await courseService.getAllCourses();
-                } else {
-                    coursesData = await courseService.getInstructorCourses(user.id);
-                }
+                // Tanto admin como instructor pueden usar getCourses
+                const coursesData = await courseService.getCourses();
                 setCourses(coursesData.courses || []);
             } catch (error) {
                 console.error('Error loading courses:', error);

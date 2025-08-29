@@ -14,7 +14,9 @@ import {
     Calendar,
     PlayCircle,
     Search,
-    UserPlus
+    UserPlus,
+    Video,
+    CheckSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -32,6 +34,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                 return [
                     ...baseItems,
                     { icon: BookOpen, label: 'Cursos', path: '/cursos' },
+                    { icon: Video, label: 'Clases Virtuales', path: '/clases-virtuales' },
+                    { icon: CheckSquare, label: 'Evaluaciones', path: '/gestion-evaluaciones' },
                     { icon: Users, label: 'Estudiantes', path: '/estudiantes' },
                     { icon: GraduationCap, label: 'Instructores', path: '/instructores' },
                     { icon: FileText, label: 'Módulos', path: '/modulos' },
@@ -44,6 +48,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                 return [
                     ...baseItems,
                     { icon: BookOpen, label: 'Gestión de Cursos', path: '/cursos' },
+                    { icon: Video, label: 'Clases Virtuales', path: '/clases-virtuales' },
+                    { icon: CheckSquare, label: 'Evaluaciones', path: '/gestion-evaluaciones' },
                     { icon: Users, label: 'Mis Estudiantes', path: '/mis-estudiantes' },
                     { icon: UserPlus, label: 'Inscripciones', path: '/inscripciones' },
                     { icon: FileText, label: 'Módulos', path: '/modulos' },
@@ -55,6 +61,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                 return [
                     ...baseItems,
                     { icon: BookOpen, label: 'Mis Cursos', path: '/mis-cursos' },
+                    { icon: Video, label: 'Mis Clases Virtuales', path: '/mis-clases-virtuales' },
+                    { icon: CheckSquare, label: 'Mis Evaluaciones', path: '/evaluaciones' },
                     { icon: Search, label: 'Explorar Cursos', path: '/explorar' },
                     { icon: Award, label: 'Mis Certificados', path: '/certificados' },
                     { icon: Calendar, label: 'Calendario', path: '/calendario' },

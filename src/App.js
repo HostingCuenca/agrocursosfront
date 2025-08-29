@@ -15,6 +15,14 @@ import CoursePlayerPage from './pages/CoursePlayerPage';
 import MyCourses from './pages/MyCourses';
 import ExploreCourses from './pages/ExploreCourses';
 import EnrollmentManagement from './pages/EnrollmentManagement';
+import StudentManagement from './pages/StudentManagement';
+import MyStudents from './pages/MyStudents';
+import InstructorManagement from './pages/InstructorManagement';
+import VirtualClassManagement from './pages/VirtualClassManagement';
+import StudentVirtualClasses from './pages/StudentVirtualClasses';
+import StudentEvaluations from './pages/StudentEvaluations';
+import TakeEvaluation from './pages/TakeEvaluation';
+import InstructorEvaluations from './pages/InstructorEvaluations';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
@@ -98,7 +106,7 @@ function App() {
                     path="/estudiantes"
                     element={
                         <ProtectedRoute requiredRole="admin">
-                            <ComingSoon />
+                            <StudentManagement />
                         </ProtectedRoute>
                     }
                 />
@@ -106,7 +114,7 @@ function App() {
                     path="/mis-estudiantes"
                     element={
                         <ProtectedRoute requiredRole="instructor">
-                            <ComingSoon />
+                            <MyStudents />
                         </ProtectedRoute>
                     }
                 />
@@ -114,7 +122,7 @@ function App() {
                     path="/instructores"
                     element={
                         <ProtectedRoute requiredRole="admin">
-                            <ComingSoon />
+                            <InstructorManagement />
                         </ProtectedRoute>
                     }
                 />
@@ -182,6 +190,82 @@ function App() {
                     path="/progreso"
                     element={
                         <ProtectedRoute requiredRole="student">
+                            <ComingSoon />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Rutas protegidas - Clases virtuales */}
+                <Route
+                    path="/clases-virtuales"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <VirtualClassManagement />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/mis-clases-virtuales"
+                    element={
+                        <ProtectedRoute requiredRole="student">
+                            <StudentVirtualClasses />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Rutas protegidas - Evaluaciones */}
+                <Route
+                    path="/evaluaciones"
+                    element={
+                        <ProtectedRoute requiredRole="student">
+                            <StudentEvaluations />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/evaluaciones/:assignmentId/realizar"
+                    element={
+                        <ProtectedRoute requiredRole="student">
+                            <TakeEvaluation />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/gestion-evaluaciones"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <InstructorEvaluations />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/evaluaciones/crear"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <ComingSoon />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/evaluaciones/:assignmentId/editar"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <ComingSoon />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/evaluaciones/:assignmentId/intentos"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <ComingSoon />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/evaluaciones/:assignmentId/revisar"
+                    element={
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
                             <ComingSoon />
                         </ProtectedRoute>
                     }
