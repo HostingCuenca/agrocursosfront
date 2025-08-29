@@ -4,10 +4,14 @@ export const classService = {
     // Obtener clases de un módulo
     getModuleClasses: async (moduleId) => {
         try {
+            console.log('🔄 classService.getModuleClasses called');
+            console.log('📌 Module ID:', moduleId);
+
             const response = await api.get(`/classes/modules/${moduleId}/classes`);
+            console.log('✅ Classes fetched:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Get module classes error:', error);
+            console.error('❌ Get module classes error:', error);
             throw error;
         }
     },
@@ -15,30 +19,48 @@ export const classService = {
     // Crear clase en un módulo (instructor/admin)
     createClass: async (moduleId, classData) => {
         try {
-            // Mapear campos según documentación
-            const apiData = {
-                title: classData.title,
-                description: classData.description,
-                type: classData.type, // "video", "text", "quiz", "assignment"
-                order_sequence: parseInt(classData.order_sequence),
-                duration_minutes: classData.duration_minutes ? parseInt(classData.duration_minutes) : undefined,
-                content_url: classData.content_url,
-                content_text: classData.content_text,
-                metadata: classData.metadata || {},
-                is_published: Boolean(classData.is_published || false)
-            };
+            console.log('🔄 classService.createClass called');
+            console.log('📌 Module ID:', moduleId);
+            console.log('📦 Class Data:', classData);
 
-            // Limpiar campos undefined para no enviarlos
-            Object.keys(apiData).forEach(key => {
-                if (apiData[key] === undefined) {
-                    delete apiData[key];
-                }
-            });
+            // Construir objeto dinámicamente - solo campos con valores
+            const apiData = {};
+            
+            if (classData.title && classData.title.trim()) {
+                apiData.title = classData.title.trim();
+            }
+            if (classData.description && classData.description.trim()) {
+                apiData.description = classData.description.trim();
+            }
+            if (classData.content_type) {
+                apiData.content_type = classData.content_type; // "video", "text", "mixed"
+            }
+            if (classData.order_sequence !== undefined && classData.order_sequence !== null) {
+                apiData.order_sequence = Number(classData.order_sequence);
+            }
+            if (classData.content_url && classData.content_url.trim()) {
+                apiData.content_url = classData.content_url.trim();
+            }
+            if (classData.content_text && classData.content_text.trim()) {
+                apiData.content_text = classData.content_text.trim();
+            }
+            if (classData.metadata) {
+                apiData.metadata = classData.metadata;
+            }
+            if (classData.is_published !== undefined) {
+                apiData.is_published = Boolean(classData.is_published);
+            }
+
+            console.log('📤 Sending to API:', apiData);
+            console.log('🌐 POST URL:', `/classes/modules/${moduleId}/classes`);
 
             const response = await api.post(`/classes/modules/${moduleId}/classes`, apiData);
+            console.log('✅ Class created:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Create class error:', error);
+            console.error('❌ Create class error:', error);
+            console.error('❌ Error status:', error.response?.status);
+            console.error('❌ Error data:', error.response?.data);
             throw error;
         }
     },
@@ -46,22 +68,48 @@ export const classService = {
     // Actualizar clase (instructor/admin) - endpoint disponible según documentación
     updateClass: async (classId, classData) => {
         try {
-            // Solo enviar los campos que se quieren actualizar (edición parcial)
+            console.log('🔄 classService.updateClass called');
+            console.log('📌 Class ID:', classId);
+            console.log('📦 Class Data received:', classData);
+            
+            // Construir objeto dinámicamente - solo campos con valores
             const apiData = {};
-            if (classData.title !== undefined) apiData.title = classData.title;
-            if (classData.description !== undefined) apiData.description = classData.description;
-            if (classData.type !== undefined) apiData.type = classData.type;
-            if (classData.order_sequence !== undefined) apiData.order_sequence = parseInt(classData.order_sequence);
-            if (classData.duration_minutes !== undefined) apiData.duration_minutes = parseInt(classData.duration_minutes);
-            if (classData.content_url !== undefined) apiData.content_url = classData.content_url;
-            if (classData.content_text !== undefined) apiData.content_text = classData.content_text;
-            if (classData.metadata !== undefined) apiData.metadata = classData.metadata;
-            if (classData.is_published !== undefined) apiData.is_published = Boolean(classData.is_published);
-
+            
+            if (classData.title && classData.title.trim()) {
+                apiData.title = classData.title.trim();
+            }
+            if (classData.description && classData.description.trim()) {
+                apiData.description = classData.description.trim();
+            }
+            if (classData.content_type) {
+                apiData.content_type = classData.content_type;
+            }
+            if (classData.order_sequence !== undefined && classData.order_sequence !== null) {
+                apiData.order_sequence = Number(classData.order_sequence);
+            }
+            if (classData.content_url && classData.content_url.trim()) {
+                apiData.content_url = classData.content_url.trim();
+            }
+            if (classData.content_text && classData.content_text.trim()) {
+                apiData.content_text = classData.content_text.trim();
+            }
+            if (classData.metadata) {
+                apiData.metadata = classData.metadata;
+            }
+            if (classData.is_published !== undefined) {
+                apiData.is_published = Boolean(classData.is_published);
+            }
+            
+            console.log('📤 Sending to API (dynamic):', apiData);
+            console.log('🌐 PUT URL:', `/classes/${classId}`);
+            
             const response = await api.put(`/classes/${classId}`, apiData);
+            console.log('✅ Class updated:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Update class error:', error);
+            console.error('❌ Update class error:', error);
+            console.error('❌ Error status:', error.response?.status);
+            console.error('❌ Error data:', error.response?.data);
             throw error;
         }
     },
@@ -80,13 +128,24 @@ export const classService = {
     // Reordenar clases (instructor/admin) - endpoint disponible según documentación
     reorderClasses: async (moduleId, classes) => {
         try {
-            // Formato según documentación: [{"id": "class-id", "order_sequence": 1}, ...]
-            const response = await api.put(`/classes/modules/${moduleId}/classes/reorder`, {
-                classes
-            });
+            console.log('🔄 classService.reorderClasses called');
+            console.log('📌 Module ID:', moduleId);
+            console.log('📦 Classes order:', classes);
+
+            // Formato correcto según pruebas: {"classOrders": [{"id": "uuid", "order_sequence": 1}]}
+            const apiData = {
+                classOrders: classes.map(classItem => ({
+                    id: classItem.id,
+                    order_sequence: Number(classItem.order_sequence)
+                }))
+            };
+
+            console.log('📤 Sending reorder data:', apiData);
+            const response = await api.put(`/classes/modules/${moduleId}/classes/reorder`, apiData);
+            console.log('✅ Classes reordered:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Reorder classes error:', error);
+            console.error('❌ Reorder classes error:', error);
             throw error;
         }
     },

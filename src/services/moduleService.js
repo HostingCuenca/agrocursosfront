@@ -4,10 +4,14 @@ export const moduleService = {
     // Obtener módulos de un curso
     getCourseModules: async (courseId) => {
         try {
+            console.log('🔄 moduleService.getCourseModules called');
+            console.log('📌 Course ID:', courseId);
+
             const response = await api.get(`/modules/courses/${courseId}/modules`);
+            console.log('✅ Modules fetched:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Get course modules error:', error);
+            console.error('❌ Get course modules error:', error);
             throw error;
         }
     },
@@ -15,19 +19,39 @@ export const moduleService = {
     // Crear módulo en un curso (instructor/admin)
     createModule: async (courseId, moduleData) => {
         try {
-            // Mapear campos según documentación
-            const apiData = {
-                title: moduleData.title,
-                description: moduleData.description,
-                order_sequence: parseInt(moduleData.order_sequence),
-                duration_minutes: moduleData.duration_minutes ? parseInt(moduleData.duration_minutes) : undefined,
-                is_published: Boolean(moduleData.is_published || false)
-            };
+            console.log('🔄 moduleService.createModule called');
+            console.log('📌 Course ID:', courseId);
+            console.log('📦 Module Data:', moduleData);
+
+            // Construir objeto dinámicamente - solo campos con valores
+            const apiData = {};
+            
+            if (moduleData.title && moduleData.title.trim()) {
+                apiData.title = moduleData.title.trim();
+            }
+            if (moduleData.description && moduleData.description.trim()) {
+                apiData.description = moduleData.description.trim();
+            }
+            if (moduleData.order_sequence !== undefined && moduleData.order_sequence !== null) {
+                apiData.order_sequence = Number(moduleData.order_sequence);
+            }
+            if (moduleData.is_published !== undefined) {
+                apiData.is_published = Boolean(moduleData.is_published);
+            }
+            if (moduleData.metadata) {
+                apiData.metadata = moduleData.metadata;
+            }
+
+            console.log('📤 Sending to API:', apiData);
+            console.log('🌐 POST URL:', `/modules/courses/${courseId}/modules`);
 
             const response = await api.post(`/modules/courses/${courseId}/modules`, apiData);
+            console.log('✅ Module created:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Create module error:', error);
+            console.error('❌ Create module error:', error);
+            console.error('❌ Error status:', error.response?.status);
+            console.error('❌ Error data:', error.response?.data);
             throw error;
         }
     },
@@ -35,18 +59,39 @@ export const moduleService = {
     // Actualizar módulo (instructor/admin) - endpoint disponible según documentación
     updateModule: async (moduleId, moduleData) => {
         try {
-            // Solo enviar los campos que se quieren actualizar (edición parcial)
+            console.log('🔄 moduleService.updateModule called');
+            console.log('📌 Module ID:', moduleId);
+            console.log('📦 Module Data received:', moduleData);
+            
+            // Construir objeto dinámicamente - solo campos con valores
             const apiData = {};
-            if (moduleData.title !== undefined) apiData.title = moduleData.title;
-            if (moduleData.description !== undefined) apiData.description = moduleData.description;
-            if (moduleData.order_sequence !== undefined) apiData.order_sequence = parseInt(moduleData.order_sequence);
-            if (moduleData.duration_minutes !== undefined) apiData.duration_minutes = parseInt(moduleData.duration_minutes);
-            if (moduleData.is_published !== undefined) apiData.is_published = Boolean(moduleData.is_published);
-
+            
+            if (moduleData.title && moduleData.title.trim()) {
+                apiData.title = moduleData.title.trim();
+            }
+            if (moduleData.description && moduleData.description.trim()) {
+                apiData.description = moduleData.description.trim();
+            }
+            if (moduleData.order_sequence !== undefined && moduleData.order_sequence !== null) {
+                apiData.order_sequence = Number(moduleData.order_sequence);
+            }
+            if (moduleData.is_published !== undefined) {
+                apiData.is_published = Boolean(moduleData.is_published);
+            }
+            if (moduleData.metadata) {
+                apiData.metadata = moduleData.metadata;
+            }
+            
+            console.log('📤 Sending to API (dynamic):', apiData);
+            console.log('🌐 PUT URL:', `/modules/${moduleId}`);
+            
             const response = await api.put(`/modules/${moduleId}`, apiData);
+            console.log('✅ Module updated:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Update module error:', error);
+            console.error('❌ Update module error:', error);
+            console.error('❌ Error status:', error.response?.status);
+            console.error('❌ Error data:', error.response?.data);
             throw error;
         }
     },
@@ -65,13 +110,24 @@ export const moduleService = {
     // Reordenar módulos (instructor/admin)
     reorderModules: async (courseId, modules) => {
         try {
-            // Formato según documentación: [{"id": "module-id", "order_sequence": 1}, ...]
-            const response = await api.put(`/modules/courses/${courseId}/modules/reorder`, {
-                modules
-            });
+            console.log('🔄 moduleService.reorderModules called');
+            console.log('📌 Course ID:', courseId);
+            console.log('📦 Modules order:', modules);
+
+            // Formato correcto según pruebas: {"moduleOrders": [{"id": "uuid", "order_sequence": 1}]}
+            const apiData = {
+                moduleOrders: modules.map(module => ({
+                    id: module.id,
+                    order_sequence: Number(module.order_sequence)
+                }))
+            };
+
+            console.log('📤 Sending reorder data:', apiData);
+            const response = await api.put(`/modules/courses/${courseId}/modules/reorder`, apiData);
+            console.log('✅ Modules reordered:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Reorder modules error:', error);
+            console.error('❌ Reorder modules error:', error);
             throw error;
         }
     },

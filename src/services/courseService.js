@@ -1,7 +1,7 @@
 import api from './authService';
 
 export const courseService = {
-    // Obtener todos los cursos con filtros (sin paginación forzada)
+    // Obtener todos los cursos con filtros opcionales
     getCourses: async (params = {}) => {
         try {
             const queryParams = new URLSearchParams();
@@ -11,11 +11,9 @@ export const courseService = {
             if (params.level) queryParams.append('level', params.level);
             if (params.search) queryParams.append('search', params.search);
             
-            // Solo agregar paginación si se especifica explícitamente
-            if (params.page && params.limit) {
-                queryParams.append('page', params.page);
-                queryParams.append('limit', params.limit);
-            }
+            // Agregar paginación solo si se especifica
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
 
             const queryString = queryParams.toString();
             const url = queryString ? `/courses?${queryString}` : '/courses';
@@ -69,25 +67,57 @@ export const courseService = {
     // Actualizar curso (instructor/admin) - según documentación
     updateCourse: async (courseId, courseData) => {
         try {
-            // Solo enviar los campos que se quieren actualizar (edición parcial)
+            console.log('🔄 courseService.updateCourse called');
+            console.log('📌 Course ID:', courseId);
+            console.log('📦 Course Data received:', courseData);
+            
+            // CONSTRUIR OBJETO DINÁMICAMENTE - Solo enviar campos que tienen valor
             const apiData = {};
-            if (courseData.title !== undefined) apiData.title = courseData.title;
-            if (courseData.description !== undefined) apiData.description = courseData.description;
-            if (courseData.category !== undefined) apiData.category = courseData.category;
-            if (courseData.subcategory !== undefined) apiData.subcategory = courseData.subcategory;
-            if (courseData.difficulty_level !== undefined) apiData.difficulty_level = courseData.difficulty_level;
-            if (courseData.price !== undefined) apiData.price = parseFloat(courseData.price);
-            if (courseData.currency !== undefined) apiData.currency = courseData.currency;
-            if (courseData.duration_hours !== undefined) apiData.duration_hours = parseInt(courseData.duration_hours);
-            if (courseData.language !== undefined) apiData.language = courseData.language;
-            if (courseData.thumbnail !== undefined) apiData.thumbnail = courseData.thumbnail;
-            if (courseData.tags !== undefined) apiData.tags = courseData.tags;
-            if (courseData.is_published !== undefined) apiData.is_published = Boolean(courseData.is_published);
+            
+            if (courseData.title && courseData.title.trim()) {
+                apiData.title = courseData.title.trim();
+            }
+            if (courseData.description && courseData.description.trim()) {
+                apiData.description = courseData.description.trim();
+            }
+            if (courseData.category) {
+                apiData.category = courseData.category;
+            }
+            if (courseData.subcategory) {
+                apiData.subcategory = courseData.subcategory;
+            }
+            if (courseData.difficulty_level) {
+                apiData.difficulty_level = courseData.difficulty_level;
+            }
+            if (courseData.price !== undefined && courseData.price !== null) {
+                apiData.price = Number(courseData.price);
+            }
+            if (courseData.currency) {
+                apiData.currency = courseData.currency;
+            }
+            if (courseData.duration_hours !== undefined && courseData.duration_hours !== null) {
+                apiData.duration_hours = Number(courseData.duration_hours);
+            }
+            if (courseData.language) {
+                apiData.language = courseData.language;
+            }
+            if (courseData.thumbnail && courseData.thumbnail.trim()) {
+                apiData.thumbnail = courseData.thumbnail.trim();
+            }
+            if (courseData.is_published !== undefined) {
+                apiData.is_published = Boolean(courseData.is_published);
+            }
+            
+            console.log('📤 Sending to API (dynamic):', apiData);
+            console.log('🌐 PUT URL:', `/courses/${courseId}`);
             
             const response = await api.put(`/courses/${courseId}`, apiData);
+            console.log('✅ API Response:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Update course error:', error);
+            console.error('❌ Update course error:', error);
+            console.error('❌ Error status:', error.response?.status);
+            console.error('❌ Error data:', error.response?.data);
             throw error;
         }
     },

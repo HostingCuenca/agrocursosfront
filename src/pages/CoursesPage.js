@@ -98,15 +98,19 @@ const CoursesPage = () => {
     };
 
     // Guardar curso (crear o actualizar)
-    const handleSaveCourse = async (courseData) => {
+    const handleSaveCourse = async (courseIdOrData, courseData) => {
         setModalLoading(true);
         try {
-            if (editingCourse) {
-                // Actualizar curso existente
-                await updateCourse(editingCourse.id, courseData);
+            // If courseData is provided, it means we're editing (courseIdOrData is the ID)
+            // If courseData is not provided, it means we're creating (courseIdOrData is the data)
+            if (courseData) {
+                // Actualizar curso existente - courseIdOrData is the course ID
+                console.log('CoursesPage: Updating course with ID:', courseIdOrData);
+                await updateCourse(courseIdOrData, courseData);
             } else {
-                // Crear nuevo curso
-                await createCourse(courseData);
+                // Crear nuevo curso - courseIdOrData is the course data
+                console.log('CoursesPage: Creating new course');
+                await createCourse(courseIdOrData);
             }
             
             setShowModal(false);

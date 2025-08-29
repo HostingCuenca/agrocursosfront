@@ -57,7 +57,7 @@ const CourseCard = ({
         return `${currency} ${numPrice.toFixed(2)}`;
     };
 
-    // Verificar permisos de gestión
+    // Verificar permisos de gestión - Admin e instructor propietario
     const canManageThisCourse = user && (
         user.role === 'admin' || 
         (user.role === 'instructor' && course.instructor_id === user.id)

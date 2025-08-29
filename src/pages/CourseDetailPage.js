@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import CourseContent from '../components/modules/CourseContent';
+import CourseContentManagement from '../components/content/CourseContentManagement';
 import EnrollmentStatus from '../components/EnrollmentStatus';
 import { enrollmentService } from '../services/enrollmentService';
 import { courseService } from '../services/courseService';
@@ -42,6 +43,7 @@ const CourseDetailPage = () => {
     const [showEnrollModal, setShowEnrollModal] = useState(false);
     const [userEnrollment, setUserEnrollment] = useState(null);
     const [loadingEnrollment, setLoadingEnrollment] = useState(false);
+    const [activeTab, setActiveTab] = useState('content'); // 'content' or 'manage'
 
     useEffect(() => {
         if (id) {
@@ -281,11 +283,49 @@ const CourseDetailPage = () => {
                             )}
                         </div>
 
-                        {/* Contenido del curso */}
-                        <CourseContent 
-                            courseId={id} 
-                            isEnrolled={canAccessCourse()}
-                        />
+                        {/* Tabs para contenido */}
+                        {canManageThisCourse && (
+                            <div className="border-b border-gray-200 mb-6">
+                                <nav className="flex space-x-8">
+                                    <button
+                                        onClick={() => setActiveTab('content')}
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            activeTab === 'content'
+                                                ? 'border-blue-500 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        📖 Vista del Curso
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('manage')}
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            activeTab === 'manage'
+                                                ? 'border-blue-500 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        ⚙️ Gestionar Contenido
+                                    </button>
+                                </nav>
+                            </div>
+                        )}
+
+                        {/* Contenido según tab activa */}
+                        {activeTab === 'content' ? (
+                            <CourseContent 
+                                courseId={id} 
+                                isEnrolled={canAccessCourse()}
+                            />
+                        ) : activeTab === 'manage' && canManageThisCourse ? (
+                            <CourseContentManagement 
+                                course={currentCourse}
+                                onContentUpdate={() => {
+                                    // Recargar el curso para actualizar estadísticas
+                                    getCourseById(id);
+                                }}
+                            />
+                        ) : null}
 
                         {/* Descripción detallada */}
                         {currentCourse.detailed_description && (
