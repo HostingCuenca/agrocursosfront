@@ -13,9 +13,13 @@ export const certificateService = {
     },
 
     // Obtener certificados emitidos para un curso (instructor/admin)
-    getCourseCertificates: async (courseId) => {
+    getCourseCertificates: async (courseId, params = {}) => {
         try {
-            const response = await api.get(`/courses/${courseId}/certificates`);
+            const queryParams = new URLSearchParams();
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            
+            const response = await api.get(`/certificates/courses/${courseId}/certificates?${queryParams.toString()}`);
             return response.data;
         } catch (error) {
             console.error('Get course certificates error:', error);
@@ -126,6 +130,44 @@ export const certificateService = {
             return response.data;
         } catch (error) {
             console.error('Get certificate by ID error:', error);
+            throw error;
+        }
+    },
+
+    // Verificar elegibilidad para certificado
+    checkEligibility: async (studentId, courseId) => {
+        try {
+            const response = await api.get(`/certificates/eligibility/${studentId}/${courseId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Check eligibility error:', error);
+            throw error;
+        }
+    },
+
+    // Generar certificado (automático o manual)
+    generateCertificate: async (studentId, courseId, options = {}) => {
+        try {
+            const requestBody = {
+                automatic: options.automatic || false,
+                override: options.override || false
+            };
+            
+            const response = await api.post(`/certificates/generate/${studentId}/${courseId}`, requestBody);
+            return response.data;
+        } catch (error) {
+            console.error('Generate certificate error:', error);
+            throw error;
+        }
+    },
+
+    // Obtener datos para descarga de certificado con plantilla
+    getCertificateDownloadData: async (certificateId) => {
+        try {
+            const response = await api.get(`/certificates/${certificateId}/download`);
+            return response.data;
+        } catch (error) {
+            console.error('Get certificate download data error:', error);
             throw error;
         }
     }

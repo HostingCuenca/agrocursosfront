@@ -23,6 +23,9 @@ import StudentVirtualClasses from './pages/StudentVirtualClasses';
 import StudentEvaluations from './pages/StudentEvaluations';
 import TakeEvaluation from './pages/TakeEvaluation';
 import InstructorEvaluations from './pages/InstructorEvaluations';
+import MyCertificates from './pages/MyCertificates';
+import CertificateManagement from './pages/CertificateManagement';
+import PublicCertificateVerification from './pages/PublicCertificateVerification';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
@@ -38,6 +41,10 @@ function App() {
             <Routes>
                 {/* Rutas públicas */}
                 <Route path="/" element={<Home />} />
+                
+                {/* Verificación pública de certificados */}
+                <Route path="/verificar" element={<PublicCertificateVerification />} />
+                <Route path="/verificar/:certificateNumber" element={<PublicCertificateVerification />} />
 
                 {/* Rutas de autenticación */}
                 <Route
@@ -155,16 +162,16 @@ function App() {
                 <Route
                     path="/certificados"
                     element={
-                        <ProtectedRoute>
-                            <ComingSoon />
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <CertificateManagement />
                         </ProtectedRoute>
                     }
                 />
                 <Route
                     path="/mis-certificados"
                     element={
-                        <ProtectedRoute>
-                            <ComingSoon />
+                        <ProtectedRoute requiredRole="student">
+                            <MyCertificates />
                         </ProtectedRoute>
                     }
                 />
