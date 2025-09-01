@@ -1,6 +1,27 @@
 import api from './authService';
 
 export const assignmentService = {
+    // ✅ OPTIMIZADO: Obtener TODAS las asignaciones con datos completos para Admin/Instructor
+    // Reemplaza múltiples llamadas a getCourseAssignments() + getAssignmentAttempts()
+    // De 50+ requests a 1 request - elimina problema N×M queries
+    getAllAssignments: async (params = {}) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (params.status) queryParams.append('status', params.status);
+            if (params.page) queryParams.append('page', params.page);
+            
+            const url = `/assignments/all${
+                queryParams.toString() ? '?' + queryParams.toString() : ''
+            }`;
+            
+            const response = await api.get(url);
+            return response.data;
+        } catch (error) {
+            console.error('Get all assignments error:', error);
+            throw error;
+        }
+    },
+
     // ========== PARA ESTUDIANTES ==========
     
     // Obtener evaluaciones disponibles para estudiante
@@ -82,7 +103,32 @@ export const assignmentService = {
         }
     },
 
-    // Iniciar intento de examen (student)
+    // ✅ NUEVO: Iniciar evaluación sin crear registro (student)
+    startEvaluation: async (assignmentId) => {
+        try {
+            const response = await api.post(`/assignments/${assignmentId}/start`);
+            return response.data;
+        } catch (error) {
+            console.error('Start evaluation error:', error);
+            throw error;
+        }
+    },
+
+    // ✅ NUEVO: Enviar evaluación completa con session token (student)
+    submitEvaluation: async (assignmentId, answers, sessionToken) => {
+        try {
+            const response = await api.post(`/assignments/${assignmentId}/submit`, {
+                answers,
+                session_token: sessionToken
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Submit evaluation error:', error);
+            throw error;
+        }
+    },
+
+    // ⚠️ DEPRECATED: Iniciar intento de examen (usa startEvaluation)
     startAttempt: async (assignmentId) => {
         try {
             const response = await api.post(`/assignments/${assignmentId}/attempt`);
@@ -93,7 +139,7 @@ export const assignmentService = {
         }
     },
 
-    // Enviar respuestas del examen (student)
+    // ⚠️ DEPRECATED: Enviar respuestas del examen (usa submitEvaluation)
     submitAttempt: async (attemptId, answers) => {
         try {
             const response = await api.post(`/assignments/attempts/${attemptId}/submit`, {

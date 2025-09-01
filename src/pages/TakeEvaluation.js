@@ -19,7 +19,7 @@ const TakeEvaluation = () => {
     const navigate = useNavigate();
     
     const [assignment, setAssignment] = useState(null);
-    const [attempt, setAttempt] = useState(null);
+    const [sessionToken, setSessionToken] = useState(null);
     const [answers, setAnswers] = useState({});
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -41,33 +41,58 @@ const TakeEvaluation = () => {
                 setTimeRemaining(prev => prev - 1);
             }, 1000);
             return () => clearTimeout(timer);
-        } else if (timeRemaining === 0 && attempt && assignment) {
+        } else if (timeRemaining === 0 && sessionToken && assignment) {
             // Auto-envío cuando se acaba el tiempo
             handleSubmitEvaluation(true);
         }
-    }, [timeRemaining, attempt, assignment]);
+    }, [timeRemaining, sessionToken, assignment]);
 
     const startEvaluation = async () => {
         setLoading(true);
         try {
             console.log('Starting evaluation with ID:', assignmentId);
-            const result = await assignmentService.startAttempt(assignmentId);
+            
+            // ✅ NUEVO: Usar endpoint /start que no crea registro en DB
+            const result = await assignmentService.startEvaluation(assignmentId);
             
             if (result.success) {
                 console.log('Evaluation started successfully:', result);
-                setAttempt(result.attempt);
+                console.log('Questions structure:', result.assignment.questions);
+                if (result.assignment.questions?.[0]?.options) {
+                    console.log('First question options:', result.assignment.questions[0].options);
+                    console.log('Option types:', result.assignment.questions[0].options.map(opt => typeof opt));
+                }
+                
                 setAssignment(result.assignment);
+                setSessionToken(result.session_token);
                 
                 // Configurar tiempo límite
                 if (result.assignment.time_limit_minutes) {
                     setTimeRemaining(result.assignment.time_limit_minutes * 60);
                 }
                 
-                // Inicializar respuestas vacías
-                const initialAnswers = {};
-                result.assignment.questions?.forEach(question => {
-                    initialAnswers[question.id] = '';
+                // ✅ NUEVO: Intentar cargar respuestas guardadas de localStorage
+                const savedAnswersKey = `evaluation_${assignmentId}_answers`;
+                const savedAnswers = localStorage.getItem(savedAnswersKey);
+                
+                let initialAnswers = {};
+                if (savedAnswers) {
+                    try {
+                        initialAnswers = JSON.parse(savedAnswers);
+                        console.log('Loaded saved answers from localStorage:', initialAnswers);
+                    } catch (error) {
+                        console.warn('Error parsing saved answers:', error);
+                        initialAnswers = {};
+                    }
+                }
+                
+                // Asegurar que todas las preguntas tienen una respuesta inicializada
+                result.assignment.questions?.forEach((question, index) => {
+                    if (initialAnswers[index] === undefined) {
+                        initialAnswers[index] = '';
+                    }
                 });
+                
                 setAnswers(initialAnswers);
             } else {
                 alert('Error: ' + (result.error || 'No se pudo iniciar la evaluación'));
@@ -95,10 +120,20 @@ const TakeEvaluation = () => {
     };
 
     const handleAnswerChange = (questionId, value) => {
-        setAnswers(prev => ({
-            ...prev,
+        const newAnswers = {
+            ...answers,
             [questionId]: value
-        }));
+        };
+        
+        setAnswers(newAnswers);
+        
+        // ✅ NUEVO: Guardar respuestas en localStorage para persistencia
+        const savedAnswersKey = `evaluation_${assignmentId}_answers`;
+        try {
+            localStorage.setItem(savedAnswersKey, JSON.stringify(newAnswers));
+        } catch (error) {
+            console.warn('Error saving answers to localStorage:', error);
+        }
     };
 
     const handleSubmitEvaluation = async (isAutoSubmit = false) => {
@@ -112,16 +147,20 @@ const TakeEvaluation = () => {
 
         setSubmitting(true);
         try {
-            // Convertir respuestas al formato esperado por el API
-            const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
-                question_id: parseInt(questionId),
-                answer: answer.toString()
-            }));
+            // ✅ NUEVO: Convertir respuestas al formato simple del nuevo endpoint
+            const answersArray = Object.values(answers);
 
             console.log('Submitting answers:', answersArray);
-            const result = await assignmentService.submitAttempt(attempt.id, answersArray);
+            console.log('Session token:', sessionToken);
+            
+            // ✅ NUEVO: Usar endpoint /submit con session token
+            const result = await assignmentService.submitEvaluation(assignmentId, answersArray, sessionToken);
             
             if (result.success) {
+                // ✅ NUEVO: Limpiar localStorage después de envío exitoso
+                const savedAnswersKey = `evaluation_${assignmentId}_answers`;
+                localStorage.removeItem(savedAnswersKey);
+                
                 alert(isAutoSubmit 
                     ? 'Tiempo agotado. Examen enviado automáticamente.'
                     : 'Examen enviado exitosamente'
@@ -139,10 +178,10 @@ const TakeEvaluation = () => {
     };
 
     const renderQuestion = (question, index) => {
-        const currentAnswer = answers[question.id] || '';
+        const currentAnswer = answers[index] || '';
 
         return (
-            <div key={question.id} className="bg-white p-6 rounded-lg shadow-md border mb-6">
+            <div key={index} className="bg-white p-6 rounded-lg shadow-md border mb-6">
                 <div className="mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                         {index + 1}. {question.question}
@@ -159,10 +198,10 @@ const TakeEvaluation = () => {
                         }`}>
                             <input
                                 type="radio"
-                                name={`question-${question.id}`}
+                                name={`question-${index}`}
                                 value="true"
                                 checked={currentAnswer === "true"}
-                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                onChange={(e) => handleAnswerChange(index, e.target.value)}
                                 className="mr-3 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                             />
                             <span className={`${currentAnswer === "true" ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
@@ -174,10 +213,10 @@ const TakeEvaluation = () => {
                         }`}>
                             <input
                                 type="radio"
-                                name={`question-${question.id}`}
+                                name={`question-${index}`}
                                 value="false"
                                 checked={currentAnswer === "false"}
-                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                onChange={(e) => handleAnswerChange(index, e.target.value)}
                                 className="mr-3 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                             />
                             <span className={`${currentAnswer === "false" ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
@@ -187,25 +226,35 @@ const TakeEvaluation = () => {
                     </div>
                 )}
 
-                {question.type === 'multiple_choice' && (
+                {question.type === 'multiple_choice' && question.options && (
                     <div className="space-y-3">
-                        {question.options?.map((option) => (
-                            <label key={option.id} className={`flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
-                                currentAnswer === option.id ? 'bg-blue-50 border-blue-300' : 'border-gray-300'
-                            }`}>
-                                <input
-                                    type="radio"
-                                    name={`question-${question.id}`}
-                                    value={option.id}
-                                    checked={currentAnswer === option.id}
-                                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                                    className="mr-3 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                />
-                                <span className={`${currentAnswer === option.id ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
-                                    {option.text}
-                                </span>
-                            </label>
-                        ))}
+                        {question.options.map((option, optionIndex) => {
+                            // Manejar diferentes formatos de opciones
+                            const optionText = typeof option === 'string' 
+                                ? option 
+                                : (option.text || option.label || JSON.stringify(option));
+                            const optionValue = typeof option === 'string' 
+                                ? optionIndex.toString()
+                                : (option.id?.toString() || optionIndex.toString());
+                            
+                            return (
+                                <label key={optionIndex} className={`flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                                    currentAnswer === optionValue ? 'bg-blue-50 border-blue-300' : 'border-gray-300'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name={`question-${index}`}
+                                        value={optionValue}
+                                        checked={currentAnswer === optionValue}
+                                        onChange={(e) => handleAnswerChange(index, e.target.value)}
+                                        className="mr-3 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                    />
+                                    <span className={`${currentAnswer === optionValue ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
+                                        {optionText}
+                                    </span>
+                                </label>
+                            );
+                        })}
                     </div>
                 )}
 
@@ -215,7 +264,7 @@ const TakeEvaluation = () => {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Escribe tu respuesta..."
                         value={currentAnswer}
-                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                        onChange={(e) => handleAnswerChange(index, e.target.value)}
                     />
                 )}
 
@@ -225,7 +274,7 @@ const TakeEvaluation = () => {
                             className="w-full p-3 border border-gray-300 rounded-lg h-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder={`Escribe tu ensayo${question.min_words ? ` (mínimo ${question.min_words} palabras)` : ''}...`}
                             value={currentAnswer}
-                            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                            onChange={(e) => handleAnswerChange(index, e.target.value)}
                         />
                         {question.min_words && (
                             <p className="text-sm text-gray-500 mt-2">
@@ -251,7 +300,7 @@ const TakeEvaluation = () => {
         );
     }
 
-    if (!assignment || !attempt) {
+    if (!assignment || !sessionToken) {
         return (
             <DashboardLayout>
                 <div className="text-center py-12">

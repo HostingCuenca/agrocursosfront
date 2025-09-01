@@ -186,11 +186,15 @@ const CourseDetailPage = () => {
                     {canManageThisCourse && (
                         <div className="flex space-x-2">
                             <button
-                                onClick={() => navigate(`/cursos/${id}/edit`)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                                onClick={() => setActiveTab('manage')}
+                                className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                                    activeTab === 'manage'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                }`}
                             >
                                 <Settings className="w-4 h-4" />
-                                <span>Gestionar Curso</span>
+                                <span>Gestionar Contenido</span>
                             </button>
                         </div>
                     )}

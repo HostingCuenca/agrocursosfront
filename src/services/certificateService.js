@@ -1,10 +1,10 @@
 import api from './authService';
 
 export const certificateService = {
-    // Obtener certificados de un estudiante
+    // ✅ CORREGIDO: Obtener certificados de un estudiante
     getStudentCertificates: async (studentId) => {
         try {
-            const response = await api.get(`/students/${studentId}/certificates`);
+            const response = await api.get(`/certificates/students/${studentId}/certificates`);
             return response.data;
         } catch (error) {
             console.error('Get student certificates error:', error);

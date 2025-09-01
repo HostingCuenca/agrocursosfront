@@ -8,10 +8,8 @@ import {
     GraduationCap,
     BarChart3,
     Settings,
-    FileText,
     Award,
     UserCheck,
-    Calendar,
     PlayCircle,
     Search,
     UserPlus,
@@ -38,7 +36,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                     { icon: CheckSquare, label: 'Evaluaciones', path: '/gestion-evaluaciones' },
                     { icon: Users, label: 'Estudiantes', path: '/estudiantes' },
                     { icon: GraduationCap, label: 'Instructores', path: '/instructores' },
-                    { icon: FileText, label: 'Módulos', path: '/modulos' },
                     { icon: Award, label: 'Certificados', path: '/certificados' },
                     { icon: UserCheck, label: 'Aprobaciones', path: '/aprobaciones' },
                     { icon: BarChart3, label: 'Reportes', path: '/reportes' },
@@ -52,7 +49,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                     { icon: CheckSquare, label: 'Evaluaciones', path: '/gestion-evaluaciones' },
                     { icon: Users, label: 'Mis Estudiantes', path: '/mis-estudiantes' },
                     { icon: UserPlus, label: 'Inscripciones', path: '/inscripciones' },
-                    { icon: FileText, label: 'Módulos', path: '/modulos' },
                     { icon: Award, label: 'Certificados', path: '/certificados' },
                     { icon: BarChart3, label: 'Estadísticas', path: '/estadisticas' },
                     { icon: Settings, label: 'Configuración', path: '/configuracion' },
@@ -64,10 +60,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     { icon: Video, label: 'Mis Clases Virtuales', path: '/mis-clases-virtuales' },
                     { icon: CheckSquare, label: 'Mis Evaluaciones', path: '/evaluaciones' },
                     { icon: Search, label: 'Explorar Cursos', path: '/explorar' },
-                    { icon: Award, label: 'Mis Certificados', path: '/certificados' },
-                    { icon: Calendar, label: 'Calendario', path: '/calendario' },
-                    { icon: BarChart3, label: 'Mi Progreso', path: '/progreso' },
-                    { icon: Settings, label: 'Configuración', path: '/configuracion' },
+                    { icon: Award, label: 'Mis Certificados', path: '/mis-certificados' },
                 ];
             default:
                 return baseItems;

@@ -74,22 +74,17 @@ const EnrollmentManagement = () => {
                 );
                 allEnrollments = response.enrollments || [];
             } else {
-                // Cargar inscripciones de todos los cursos del instructor
-                for (const course of courses) {
-                    try {
-                        const response = await enrollmentService.getCourseEnrollments(
-                            course.id, 
-                            { status: filters.status }
-                        );
-                        const courseEnrollments = (response.enrollments || []).map(enrollment => ({
-                            ...enrollment,
-                            course_title: course.title,
-                            course_id: course.id
-                        }));
-                        allEnrollments = [...allEnrollments, ...courseEnrollments];
-                    } catch (error) {
-                        console.error(`Error loading enrollments for course ${course.id}:`, error);
-                    }
+                // ✅ OPTIMIZADO: Una sola llamada para todos los enrollments
+                // Antes: N llamadas (una por curso) = 11+ segundos
+                // Ahora: 1 llamada con todos los datos = milisegundos
+                try {
+                    const response = await enrollmentService.getAllEnrollments({
+                        status: filters.status
+                    });
+                    // Los datos ya vienen completos con course_title, student_name, etc.
+                    allEnrollments = response.enrollments || [];
+                } catch (error) {
+                    console.error('Error loading all enrollments:', error);
                 }
             }
 

@@ -1,6 +1,28 @@
 import api from './authService';
 
 export const enrollmentService = {
+    // ✅ OPTIMIZADO: Obtener TODAS las inscripciones para Admin/Instructor en una sola llamada
+    // Reemplaza múltiples llamadas a getCourseEnrollments() por curso
+    // De 11+ segundos a milisegundos - elimina problema N+1 queries
+    getAllEnrollments: async (params = {}) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (params.status) queryParams.append('status', params.status);
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            
+            const url = `/enrollments/all${
+                queryParams.toString() ? '?' + queryParams.toString() : ''
+            }`;
+            
+            const response = await api.get(url);
+            return response.data;
+        } catch (error) {
+            console.error('Get all enrollments error:', error);
+            throw error;
+        }
+    },
+
     // Obtener inscripciones de un estudiante
     getStudentEnrollments: async (studentId, params = {}) => {
         try {

@@ -75,45 +75,54 @@ const Home = () => {
             <Navbar />
 
             {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-primary-50 to-olive-50 py-20 lg:py-32 overflow-hidden">
-                <div className="absolute inset-0 bg-black/5"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="relative bg-white py-16 lg:py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         {/* Content */}
                         <div className="text-center lg:text-left">
+                            <div className="mb-6">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-olive-100 text-olive-800 mb-4">
+                                    Educación Agropecuaria Profesional
+                                </span>
+                            </div>
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-                                Centro de Formación
-                                <span className="block text-olive-600">Desarrollo Agropecuario</span>
+                                Transforma tu futuro en el
+                                <span className="block text-olive-600">sector agropecuario</span>
                             </h1>
                             <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl">
-                                Impulsa tu carrera en el sector agropecuario con nuestra plataforma educativa
-                                especializada. Aprende técnicas modernas, sostenibles e innovadoras.
+                                Únete a miles de profesionales que han mejorado sus habilidades con nuestros cursos especializados en agricultura sostenible y ganadería tecnificada.
                             </p>
 
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                                 <Link
                                     to="/register"
-                                    className="btn-primary inline-flex items-center justify-center px-8 py-4 text-lg"
+                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-olive-600 border border-transparent rounded-lg hover:bg-olive-700 transition-all duration-200"
                                 >
-                                    Comenzar Ahora
+                                    Comenzar Gratis
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Link>
                                 <Link
                                     to="/login"
-                                    className="btn-secondary px-8 py-4 text-lg text-center"
+                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-olive-700 bg-white border border-olive-300 rounded-lg hover:bg-olive-50 transition-all duration-200"
                                 >
-                                    Acceder
+                                    Iniciar Sesión
                                 </Link>
                             </div>
 
-                            {/* Quick Stats */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
-                                {stats.map((stat, index) => (
-                                    <div key={index} className="text-center">
-                                        <div className="text-2xl font-bold text-gray-900">{stat.number}</div>
-                                        <div className="text-sm text-gray-600">{stat.label}</div>
-                                    </div>
-                                ))}
+                            {/* Trust Indicators */}
+                            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 text-sm text-gray-600">
+                                <div className="flex items-center">
+                                    <CheckCircle className="w-5 h-5 text-olive-500 mr-2" />
+                                    <span>Certificación incluida</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <CheckCircle className="w-5 h-5 text-olive-500 mr-2" />
+                                    <span>Instructores expertos</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <CheckCircle className="w-5 h-5 text-olive-500 mr-2" />
+                                    <span>Acceso de por vida</span>
+                                </div>
                             </div>
                         </div>
 
@@ -121,38 +130,37 @@ const Home = () => {
                         <div className="relative">
                             <div className="aspect-w-16 aspect-h-12 lg:aspect-h-16">
                                 <img
-                                    src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2148&q=80"
-                                    alt="Agricultura moderna"
-                                    className="w-full h-full object-cover rounded-2xl shadow-2xl"
+                                    src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80"
+                                    alt="Agricultura sostenible y moderna"
+                                    className="w-full h-full object-cover rounded-lg shadow-lg"
                                 />
                             </div>
-                            {/* Floating Card */}
-                            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-12 h-12 bg-olive-100 rounded-full flex items-center justify-center">
-                                        <CheckCircle className="w-6 h-6 text-olive-600" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-gray-900">Certificación Garantizada</div>
-                                        <div className="text-sm text-gray-600">Reconocida nacionalmente</div>
-                                    </div>
+                        </div>
+                    </div>
+
+                    {/* Stats Section */}
+                    <div className="mt-16 pt-12 border-t border-gray-200">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                            {stats.map((stat, index) => (
+                                <div key={index} className="text-center">
+                                    <div className="text-3xl font-bold text-olive-600 mb-2">{stat.number}</div>
+                                    <div className="text-sm font-medium text-gray-600">{stat.label}</div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Features */}
-            <section className="py-20 bg-white">
+            <section className="py-20 bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                             ¿Por qué elegir CFDA?
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Ofrecemos una experiencia educativa integral diseñada específicamente
-                            para profesionales del sector agropecuario.
+                            Una plataforma educativa diseñada por y para profesionales del sector agropecuario
                         </p>
                     </div>
 
@@ -160,14 +168,14 @@ const Home = () => {
                         {features.map((feature, index) => {
                             const Icon = feature.icon;
                             return (
-                                <div key={index} className="group text-center p-6 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300">
-                                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-md">
-                                        <Icon className={`w-8 h-8 ${feature.color}`} />
+                                <div key={index} className="bg-white p-6 rounded-lg border border-gray-200 hover:border-olive-300 hover:shadow-md transition-all duration-200">
+                                    <div className="w-12 h-12 bg-olive-100 rounded-lg flex items-center justify-center mb-4">
+                                        <Icon className="w-6 h-6 text-olive-600" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
                                         {feature.title}
                                     </h3>
-                                    <p className="text-gray-600 leading-relaxed">
+                                    <p className="text-gray-600 text-sm leading-relaxed">
                                         {feature.description}
                                     </p>
                                 </div>
@@ -178,31 +186,38 @@ const Home = () => {
             </section>
 
             {/* Testimonials */}
-            <section className="py-20 bg-gray-50">
+            <section className="py-20 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                            Lo que dicen nuestros estudiantes
+                            Historias de éxito
                         </h2>
                         <p className="text-xl text-gray-600">
-                            Historias reales de transformación profesional
+                            Profesionales que han transformado su carrera con CFDA
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {testimonials.map((testimonial, index) => (
-                            <div key={index} className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <div key={index} className="bg-white p-6 rounded-lg border border-gray-200 hover:border-olive-300 hover:shadow-sm transition-all duration-200">
                                 <div className="flex mb-4">
                                     {[...Array(testimonial.rating)].map((_, i) => (
-                                        <Star key={i} className="w-5 h-5 text-primary-400 fill-current" />
+                                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                                     ))}
                                 </div>
-                                <p className="text-gray-600 mb-6 italic">
+                                <p className="text-gray-700 mb-4 text-sm leading-relaxed">
                                     "{testimonial.text}"
                                 </p>
-                                <div>
-                                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                                    <div className="text-sm text-gray-500">{testimonial.role}</div>
+                                <div className="flex items-center">
+                                    <div className="w-10 h-10 bg-olive-100 rounded-full flex items-center justify-center mr-3">
+                                        <span className="text-olive-600 font-medium text-sm">
+                                            {testimonial.name.split(' ').map(n => n[0]).join('')}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-gray-900 text-sm">{testimonial.name}</div>
+                                        <div className="text-xs text-gray-500">{testimonial.role}</div>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -256,10 +271,10 @@ const Home = () => {
                             <ArrowRight className="ml-2 w-5 h-5" />
                         </Link>
                         <Link
-                            to="/courses"
+                            to="/register"
                             className="border-2 border-white text-white hover:bg-white hover:text-olive-700 px-8 py-4 rounded-lg font-semibold text-lg transition-all"
                         >
-                            Explorar Cursos
+                            Ver Cursos
                         </Link>
                     </div>
 

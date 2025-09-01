@@ -26,6 +26,8 @@ import InstructorEvaluations from './pages/InstructorEvaluations';
 import MyCertificates from './pages/MyCertificates';
 import CertificateManagement from './pages/CertificateManagement';
 import PublicCertificateVerification from './pages/PublicCertificateVerification';
+import CreateAssignment from './pages/CreateAssignment';
+import EditAssignment from './pages/EditAssignment';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
@@ -151,14 +153,7 @@ function App() {
                 />
 
                 {/* Rutas protegidas - Contenido educativo */}
-                <Route
-                    path="/modulos"
-                    element={
-                        <ProtectedRoute>
-                            <ComingSoon />
-                        </ProtectedRoute>
-                    }
-                />
+                {/* Nota: La gestión de módulos está integrada en /cursos/:id (pestaña "Gestionar Contenido") */}
                 <Route
                     path="/certificados"
                     element={
@@ -189,14 +184,6 @@ function App() {
                     path="/estadisticas"
                     element={
                         <ProtectedRoute requiredRole="instructor">
-                            <ComingSoon />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/progreso"
-                    element={
-                        <ProtectedRoute requiredRole="student">
                             <ComingSoon />
                         </ProtectedRoute>
                     }
@@ -249,7 +236,7 @@ function App() {
                     path="/evaluaciones/crear"
                     element={
                         <ProtectedRoute requiredRole={["instructor", "admin"]}>
-                            <ComingSoon />
+                            <CreateAssignment />
                         </ProtectedRoute>
                     }
                 />
@@ -257,7 +244,7 @@ function App() {
                     path="/evaluaciones/:assignmentId/editar"
                     element={
                         <ProtectedRoute requiredRole={["instructor", "admin"]}>
-                            <ComingSoon />
+                            <EditAssignment />
                         </ProtectedRoute>
                     }
                 />
@@ -278,23 +265,6 @@ function App() {
                     }
                 />
 
-                {/* Rutas protegidas - Calendario y configuración */}
-                <Route
-                    path="/calendario"
-                    element={
-                        <ProtectedRoute>
-                            <ComingSoon />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/configuracion"
-                    element={
-                        <ProtectedRoute>
-                            <ComingSoon />
-                        </ProtectedRoute>
-                    }
-                />
 
                 {/* Ruta 404 - Página no encontrada */}
                 <Route path="/404" element={<NotFound />} />

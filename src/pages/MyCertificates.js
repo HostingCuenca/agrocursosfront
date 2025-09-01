@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Award, Search, Filter, Download, Eye, RefreshCw } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import CertificateCard from '../components/certificates/CertificateCard';
+import CertificateDownloader from '../components/certificates/CertificateDownloader';
 import useCertificateStore from '../store/certificateStore';
 import useAuthStore from '../store/authStore';
 

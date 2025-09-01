@@ -93,40 +93,39 @@ const MyStudents = () => {
                 ? courses.filter(c => c.id === selectedCourse)
                 : courses;
 
-            // Recopilar inscripciones de los cursos del instructor
-            for (const course of coursesToLoad) {
-                try {
-                    const response = await enrollmentService.getCourseEnrollments(course.id, {
-                        status: filters.status || undefined
-                    });
-                    const enrollments = response.enrollments || [];
-                    
-                    enrollments.forEach(enrollment => {
-                        const studentKey = enrollment.student_email;
-                        if (!studentsMap.has(studentKey)) {
-                            studentsMap.set(studentKey, {
-                                id: enrollment.student_id || enrollment.student_email,
-                                name: enrollment.student_name,
-                                email: enrollment.student_email,
-                                enrollments: []
-                            });
-                        }
-                        
-                        studentsMap.get(studentKey).enrollments.push({
-                            ...enrollment,
-                            course_title: course.title,
-                            course_id: course.id,
-                            course_description: course.description
+            // ✅ OPTIMIZADO: Una sola llamada para todos los enrollments del instructor
+            try {
+                const response = await enrollmentService.getAllEnrollments({
+                    status: filters.status || undefined
+                });
+                const allEnrollments = response.enrollments || [];
+                
+                // Filtrar por curso seleccionado si aplica
+                const relevantEnrollments = selectedCourse 
+                    ? allEnrollments.filter(e => e.course_id === selectedCourse)
+                    : allEnrollments;
+                
+                relevantEnrollments.forEach(enrollment => {
+                    const studentKey = enrollment.student_email;
+                    if (!studentsMap.has(studentKey)) {
+                        studentsMap.set(studentKey, {
+                            id: enrollment.student_id || enrollment.student_email,
+                            name: enrollment.student_name,
+                            email: enrollment.student_email,
+                            enrollments: []
                         });
+                    }
+                    
+                    // Los datos ya vienen completos del backend optimizado
+                    studentsMap.get(studentKey).enrollments.push(enrollment);
 
-                        // Contar por estados
-                        if (enrollment.status === 'pending') totalPending++;
-                        else if (enrollment.status === 'enrolled') totalActive++;
-                        else if (enrollment.status === 'completed') totalCompleted++;
-                    });
-                } catch (error) {
-                    console.error(`Error loading enrollments for course ${course.id}:`, error);
-                }
+                    // Contar por estados
+                    if (enrollment.status === 'pending') totalPending++;
+                    else if (enrollment.status === 'enrolled') totalActive++;
+                    else if (enrollment.status === 'completed') totalCompleted++;
+                });
+            } catch (error) {
+                console.error('Error loading all enrollments:', error);
             }
 
             let studentsArray = Array.from(studentsMap.values());

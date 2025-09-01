@@ -57,25 +57,69 @@ const InstructorEvaluations = () => {
                 
                 setCourses(instructorCourses);
                 
-                // Cargar evaluaciones de todos los cursos
-                const allAssignments = [];
-                for (const course of instructorCourses) {
-                    try {
-                        const assignmentsResponse = await assignmentService.getCourseAssignments(course.id);
-                        if (assignmentsResponse.success && assignmentsResponse.assignments) {
-                            const courseAssignments = assignmentsResponse.assignments.map(assignment => ({
-                                ...assignment,
-                                course_title: course.title,
-                                course_id: course.id
-                            }));
-                            allAssignments.push(...courseAssignments);
-                        }
-                    } catch (error) {
-                        console.error(`Error loading assignments for course ${course.title}:`, error);
+                // ✅ OPTIMIZADO: Una sola llamada para todas las evaluaciones + intentos
+                // Antes: N llamadas por curso + M llamadas por assignment = 50+ requests
+                // Ahora: 1 llamada con todos los datos = milisegundos
+                try {
+                    const assignmentsResponse = await assignmentService.getAllAssignments();
+                    if (assignmentsResponse.success && assignmentsResponse.assignments) {
+                        // Agrupar datos por assignment_id (pueden haber múltiples filas por assignment debido a intentos)
+                        const assignmentMap = new Map();
+                        
+                        assignmentsResponse.assignments.forEach(row => {
+                            const assignmentId = row.assignment_id;
+                            
+                            if (!assignmentMap.has(assignmentId)) {
+                                assignmentMap.set(assignmentId, {
+                                    id: assignmentId,
+                                    title: row.assignment_title,
+                                    description: row.assignment_description,
+                                    max_points: row.max_points,
+                                    time_limit_minutes: row.time_limit_minutes,
+                                    due_date: row.due_date,
+                                    is_published: row.is_published,
+                                    course_id: row.course_id,
+                                    course_title: row.course_title,
+                                    course_category: row.course_category,
+                                    instructor_name: row.instructor_name,
+                                    total_attempts: 0,
+                                    students_attempted: new Set(),
+                                    attempts: []
+                                });
+                            }
+                            
+                            const assignment = assignmentMap.get(assignmentId);
+                            
+                            // Agregar intento si existe
+                            if (row.attempt_id) {
+                                assignment.attempts.push({
+                                    id: row.attempt_id,
+                                    student_id: row.student_id,
+                                    student_name: row.student_name,
+                                    student_email: row.student_email,
+                                    started_at: row.started_at,
+                                    submitted_at: row.submitted_at,
+                                    score: row.score,
+                                    status: row.attempt_status,
+                                    time_spent_minutes: row.time_spent_minutes
+                                });
+                                assignment.students_attempted.add(row.student_id);
+                                assignment.total_attempts++;
+                            }
+                        });
+                        
+                        // Convertir Map a Array y ajustar contador de estudiantes
+                        const finalAssignments = Array.from(assignmentMap.values()).map(assignment => ({
+                            ...assignment,
+                            students_attempted: assignment.students_attempted.size
+                        }));
+                        
+                        setAssignments(finalAssignments);
                     }
+                } catch (error) {
+                    console.error('Error loading all assignments:', error);
+                    setAssignments([]);
                 }
-                
-                setAssignments(allAssignments);
             }
         } catch (error) {
             console.error('Error loading instructor data:', error);

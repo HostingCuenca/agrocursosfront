@@ -1017,3 +1017,51 @@ const CertificateDownloader = ({ certificateId, token }) => {
 
 ### 🔍 **QR contiene:** `http://localhost:3010/api/certificates/{number}/verify`
 **Al escanear:** Verificación pública instantánea ✅
+
+¡Excelente pregunta! El sistema ya está preparado para eso. Te explico cómo funciona:
+
+🎨 PLANTILLAS POR CATEGORÍA DE CURSO
+
+🔧 CÓMO FUNCIONA ACTUALMENTE:
+
+El endpoint /download automáticamente selecciona la plantilla según la categoría del curso:
+
+// 1. Obtiene la categoría del curso
+course_category: "agriculture" // del certificado
+
+// 2. Busca plantilla específica para esa categoría
+SELECT * FROM certificate_templates
+WHERE category = 'agriculture' AND status = 'active'
+ORDER BY is_default DESC
+
+// 3. Si no encuentra, usa plantilla general
+WHERE category = 'general'
+
+📋 EJEMPLO DE MÚLTIPLES PLANTILLAS:
+
+⏺ Bash(echo "🎨 CREAR PLANTILLA PARA GANADERÍA")
+⎿  🎨 CREAR PLANTILLA PARA GANADERÍA
+
+⏺ Bash(curl -s -X POST "http://localhost:3010/api/certificates/templates" -H "Authorization: Bearer
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkNzA0ZmNmZi05Zj…)
+⎿  {                                                                                           
+"error": "Expected double-quoted property name in JSON at position 445 (line 9 column 33)"
+}
+
+⏺ Bash(curl -s -X POST "http://localhost:3010/api/certificates/templates" -H "Authorization: Bearer
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkNzA0ZmNmZi05Zj…)
+⎿  {                                            
+"success": true,
+"message": "Plantilla creada exitosamente",
+… +40 lines (ctrl+r to expand)
+
+⏺ Perfecto! Ahora vamos a probar que automáticamente use la plantilla correcta según la categoría:
+
+⏺ Bash(echo "🧪 PROBAR: Ver plantillas disponibles ahora")
+⎿  🧪 PROBAR: Ver plantillas disponibles ahora
+
+⏺ Bash(curl -s "http://localhost:3010/api/certificates/templates" -H "Authorization: Bearer
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkNzA0ZmNmZi05ZjA5LTQ5OT…)
+⎿  {                                        
+"name": "Plantilla Formal Agricultura",
+"category": "agriculture",
