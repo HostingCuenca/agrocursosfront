@@ -265,6 +265,9 @@ export const assignmentService = {
                         errors[question.id] = 'Selecciona Verdadero o Falso';
                     }
                     break;
+
+                default:
+                    break;
             }
         });
 
