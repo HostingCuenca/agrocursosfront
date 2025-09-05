@@ -1,7 +1,7 @@
 import api from './authService';
 
 export const instructorService = {
-    // Obtener lista de instructores con paginación y filtros (solo admin)
+    // Obtener lista de instructores con paginación y filtros (solo  admin)
     getInstructors: async (params = {}) => {
         try {
             const queryParams = new URLSearchParams();
