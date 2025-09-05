@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ChevronLeft, 
-    ChevronRight, 
     BookOpen, 
     PlayCircle, 
     FileText, 
@@ -12,7 +11,6 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import useCourseStore from '../store/courseStore';
-import { moduleService } from '../services/moduleService';
 import { classService } from '../services/classService';
 import useAuthStore from '../store/authStore';
 import ModuleClasses from '../components/courses/ModuleClasses';
