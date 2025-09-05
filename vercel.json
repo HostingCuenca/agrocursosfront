@@ -9,6 +9,11 @@
       }
     }
   ],
+  "build": {
+    "env": {
+      "CI": "false"
+    }
+  },
   "routes": [
     {
       "src": "/static/(.*)",
