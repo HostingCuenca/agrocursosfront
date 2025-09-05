@@ -30,10 +30,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "functions": {
-    "build": {
-      "includeFiles": "build/**"
-    }
-  }
+  ]
 }
