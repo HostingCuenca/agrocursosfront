@@ -26,8 +26,11 @@ import InstructorEvaluations from './pages/InstructorEvaluations';
 import MyCertificates from './pages/MyCertificates';
 import CertificateManagement from './pages/CertificateManagement';
 import PublicCertificateVerification from './pages/PublicCertificateVerification';
+import ApprovalsPage from './pages/ApprovalsPage';
 import CreateAssignment from './pages/CreateAssignment';
 import EditAssignment from './pages/EditAssignment';
+import ReportsPage from './pages/ReportsPage';
+import ConfigurationPage from './pages/ConfigurationPage';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
@@ -110,6 +113,16 @@ function App() {
                     }
                 />
 
+                {/* Rutas protegidas - Configuración */}
+                <Route
+                    path="/configuracion"
+                    element={
+                        <ProtectedRoute>
+                            <ConfigurationPage />
+                        </ProtectedRoute>
+                    }
+                />
+
                 {/* Rutas protegidas - Gestión de usuarios */}
                 <Route
                     path="/estudiantes"
@@ -138,8 +151,8 @@ function App() {
                 <Route
                     path="/aprobaciones"
                     element={
-                        <ProtectedRoute requiredRole="admin">
-                            <ComingSoon />
+                        <ProtectedRoute requiredRole={["instructor", "admin"]}>
+                            <ApprovalsPage />
                         </ProtectedRoute>
                     }
                 />
@@ -176,7 +189,7 @@ function App() {
                     path="/reportes"
                     element={
                         <ProtectedRoute requiredRole="admin">
-                            <ComingSoon />
+                            <ReportsPage />
                         </ProtectedRoute>
                     }
                 />

@@ -1063,5 +1063,6 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkNzA0ZmNmZi05Zj…)
 ⏺ Bash(curl -s "http://localhost:3010/api/certificates/templates" -H "Authorization: Bearer
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkNzA0ZmNmZi05ZjA5LTQ5OT…)
 ⎿  {                                        
-"name": "Plantilla Formal Agricultura",
+"name": "Plantilla Formal Agricultu
+ra",
 "category": "agriculture",

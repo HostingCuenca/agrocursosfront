@@ -46,6 +46,19 @@ export const assignmentService = {
         }
     },
 
+    // ✅ OPTIMIZADO: Obtener TODAS las asignaciones del estudiante con intentos incluidos
+    // Reemplaza múltiples llamadas: getCourses() + getStudentAssignments() + getMyAttempts()  
+    // De 26+ requests a 1 request - elimina problema N+M queries en StudentEvaluations
+    getStudentAssignmentsBatch: async () => {
+        try {
+            const response = await api.get('/assignments/student-batch');
+            return response.data;
+        } catch (error) {
+            console.error('Get student assignments batch error:', error);
+            throw error;
+        }
+    },
+
     // ========== PARA INSTRUCTORES/ADMINISTRADORES ==========
 
     // Obtener asignaciones de un curso

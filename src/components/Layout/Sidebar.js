@@ -61,6 +61,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     { icon: CheckSquare, label: 'Mis Evaluaciones', path: '/evaluaciones' },
                     { icon: Search, label: 'Explorar Cursos', path: '/explorar' },
                     { icon: Award, label: 'Mis Certificados', path: '/mis-certificados' },
+                    { icon: Settings, label: 'Configuración', path: '/configuracion' },
                 ];
             default:
                 return baseItems;

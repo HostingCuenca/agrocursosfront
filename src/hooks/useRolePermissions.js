@@ -72,11 +72,15 @@ export const useRolePermissions = () => {
             certificates: {
                 canIssue: ['instructor', 'admin'].includes(userRole),
                 canRevoke: ['instructor', 'admin'].includes(userRole),
-                canCreateTemplates: userRole === 'admin',
                 canViewOwn: true,
                 canViewAll: (courseInstructorId) => {
                     return userRole === 'admin' || (userRole === 'instructor' && courseInstructorId === userId);
-                }
+                },
+                // Permisos para plantillas de certificados
+                canCreateTemplate: userRole === 'admin',
+                canEditTemplate: userRole === 'admin',
+                canDeleteTemplate: userRole === 'admin',
+                canViewTemplates: ['instructor', 'admin'].includes(userRole)
             },
 
             // Permisos de clases virtuales
@@ -92,6 +96,18 @@ export const useRolePermissions = () => {
                     return userRole === 'admin' || (userRole === 'instructor' && courseInstructorId === userId);
                 },
                 canRegister: userRole === 'student'
+            },
+
+            // Permisos de inscripciones y aprobaciones
+            enrollments: {
+                canViewAll: userRole === 'admin',
+                canViewOwn: ['instructor', 'admin'].includes(userRole),
+                canApprove: ['instructor', 'admin'].includes(userRole),
+                canReject: ['instructor', 'admin'].includes(userRole),
+                canApproveMultiple: ['instructor', 'admin'].includes(userRole),
+                canViewStats: ['instructor', 'admin'].includes(userRole),
+                canCreate: userRole === 'admin',
+                canCancel: ['instructor', 'admin'].includes(userRole)
             },
 
             // Permisos administrativos

@@ -1,8 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users, BookOpen, Edit, Trash2, Eye, DollarSign, Globe, Calendar } from 'lucide-react';
 import useRolePermissions from '../../hooks/useRolePermissions';
 import useAuthStore from '../../store/authStore';
+
+// Componente de imagen con fallback
+const CourseImage = ({ src, alt, className, placeholderSize = 'w-12 h-12' }) => {
+    const [imageError, setImageError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const handleImageError = () => {
+        setImageError(true);
+        setIsLoading(false);
+    };
+
+    const handleImageLoad = () => {
+        setIsLoading(false);
+    };
+
+    // Si no hay src o hay error, mostrar placeholder
+    if (!src || imageError || src === '' || src === null) {
+        return (
+            <div className={`${className} flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200`}>
+                <BookOpen className={`${placeholderSize} text-primary-500`} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={className}>
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                </div>
+            )}
+            <img
+                src={src}
+                alt={alt}
+                className="w-full h-full object-cover"
+                onError={handleImageError}
+                onLoad={handleImageLoad}
+                style={{ display: isLoading ? 'none' : 'block' }}
+            />
+        </div>
+    );
+};
 
 const CourseCard = ({ 
     course, 
@@ -71,23 +113,12 @@ const CourseCard = ({
             <div className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <div className="flex">
                     {/* Imagen del curso */}
-                    <div className="w-48 h-32 bg-gray-200 flex-shrink-0">
-                        {course.thumbnail ? (
-                            <img
-                                src={course.thumbnail}
-                                alt={course.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.parentNode.style.backgroundColor = '#f3f4f6';
-                                }}
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                                <BookOpen className="w-8 h-8 text-gray-400" />
-                            </div>
-                        )}
-                    </div>
+                    <CourseImage
+                        src={course.thumbnail}
+                        alt={course.title}
+                        className="w-48 h-32 flex-shrink-0 relative"
+                        placeholderSize="w-8 h-8"
+                    />
 
                     {/* Contenido */}
                     <div className="flex-1 p-4 flex justify-between">
@@ -193,21 +224,13 @@ const CourseCard = ({
     return (
         <div className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
             {/* Imagen del curso */}
-            <div className="h-48 bg-gray-200 relative">
-                {course.thumbnail ? (
-                    <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                            e.target.style.display = 'none';
-                        }}
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen className="w-12 h-12 text-gray-400" />
-                    </div>
-                )}
+            <div className="h-48 relative">
+                <CourseImage
+                    src={course.thumbnail}
+                    alt={course.title}
+                    className="w-full h-full"
+                    placeholderSize="w-12 h-12"
+                />
 
                 {/* Status Badge */}
                 {course.is_published !== undefined && (

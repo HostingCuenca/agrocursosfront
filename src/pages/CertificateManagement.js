@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { 
-    Award, Search, Plus, Filter, BarChart3, Users, 
-    Calendar, Download, RefreshCw, AlertCircle 
+    Award, Search, BarChart3, Users, 
+    Calendar, RefreshCw, AlertCircle, FileText 
 } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import CertificateCard from '../components/certificates/CertificateCard';
+import CertificateTemplateManager from '../components/certificates/CertificateTemplateManager';
 import useCertificateStore from '../store/certificateStore';
 import useCourseStore from '../store/courseStore';
 import useAuthStore from '../store/authStore';
@@ -101,6 +102,9 @@ const CertificateManagement = () => {
     const tabs = [
         { id: 'overview', label: 'Resumen', icon: BarChart3 },
         { id: 'certificates', label: 'Certificados', icon: Award },
+        ...(permissions.certificates.canViewTemplates ? [
+            { id: 'templates', label: 'Plantillas', icon: FileText }
+        ] : []),
         { id: 'students', label: 'Estudiantes', icon: Users }
     ];
 
@@ -355,6 +359,17 @@ const CertificateManagement = () => {
                             </div>
                         )}
                     </div>
+                )}
+
+                {/* Plantillas - Tab Templates */}
+                {activeTab === 'templates' && permissions.certificates.canViewTemplates && (
+                    <CertificateTemplateManager 
+                        permissions={{
+                            canCreateTemplate: permissions.certificates.canCreateTemplate,
+                            canEditTemplate: permissions.certificates.canEditTemplate,
+                            canDeleteTemplate: permissions.certificates.canDeleteTemplate
+                        }}
+                    />
                 )}
 
                 {/* Modal de revocación */}

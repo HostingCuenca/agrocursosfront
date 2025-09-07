@@ -48,69 +48,65 @@ const StudentEvaluations = () => {
     const loadStudentEvaluations = async () => {
         setLoading(true);
         try {
-            // Obtener todos los cursos y filtrar solo los inscritos
-            const coursesResponse = await courseService.getCourses();
+            // ✅ OPTIMIZADO: Una sola llamada obtiene TODO
+            // Antes: 1 + N cursos + M assignments = 26+ requests
+            // Ahora: 1 request con todos los datos
+            const batchResponse = await assignmentService.getStudentAssignmentsBatch();
             
-            if (coursesResponse.success && coursesResponse.courses) {
-                // Filtrar solo cursos inscritos
-                const enrolledCoursesList = coursesResponse.courses.filter(course => 
-                    course.enrollment_status === 'enrolled'
-                );
+            if (batchResponse.success && batchResponse.courses_with_assignments) {
+                // Extraer cursos inscritos
+                const enrolledCoursesList = batchResponse.courses_with_assignments.map(course => ({
+                    id: course.course_id,
+                    title: course.course_title,
+                    enrollment_status: course.enrollment_status
+                }));
                 setEnrolledCourses(enrolledCoursesList);
 
-                // Obtener evaluaciones de cada curso inscrito
+                // Extraer assignments con intentos ya incluidos
                 const allAssignments = [];
-                for (const course of enrolledCoursesList) {
-                    try {
-                        const assignmentsResponse = await assignmentService.getStudentAssignments(course.id);
-                        if (assignmentsResponse.success && assignmentsResponse.assignments) {
-                            const courseAssignments = assignmentsResponse.assignments.map(assignment => ({
-                                ...assignment,
-                                course_title: course.title,
-                                course_id: course.id
-                            }));
-                            allAssignments.push(...courseAssignments);
-                        }
-                    } catch (error) {
-                        console.error(`Error loading assignments for course ${course.title}:`, error);
-                    }
-                }
+                const attempts = {};
+                
+                batchResponse.courses_with_assignments.forEach(course => {
+                    course.assignments.forEach(assignment => {
+                        // Agregar assignment con datos del curso
+                        const assignmentWithCourse = {
+                            ...assignment,
+                            id: assignment.assignment_id,
+                            course_title: course.course_title,
+                            course_id: course.course_id
+                        };
+                        allAssignments.push(assignmentWithCourse);
+                        
+                        // Los intentos ya vienen incluidos - no necesitamos llamadas adicionales
+                        attempts[assignment.assignment_id] = assignment.attempts || [];
+                    });
+                });
 
                 setAssignments(allAssignments);
-                console.log('Enrolled courses:', enrolledCoursesList.length);
-                console.log('Total assignments:', allAssignments.length);
-
-                // Cargar intentos para cada evaluación
-                loadAssignmentAttempts(allAssignments);
+                setAssignmentAttempts(attempts);
+                
+                console.log('✅ OPTIMIZED - Single batch call loaded:');
+                console.log('📚 Enrolled courses:', enrolledCoursesList.length);
+                console.log('📝 Total assignments:', allAssignments.length);
+                console.log('🎯 Statistics:', batchResponse.statistics);
             } else {
                 console.log('No courses found or API error');
                 setEnrolledCourses([]);
                 setAssignments([]);
+                setAssignmentAttempts({});
             }
         } catch (error) {
             console.error('Error loading student evaluations:', error);
             setEnrolledCourses([]);
             setAssignments([]);
+            setAssignmentAttempts({});
         } finally {
             setLoading(false);
         }
     };
 
-    const loadAssignmentAttempts = async (assignmentsList) => {
-        const attempts = {};
-        for (const assignment of assignmentsList) {
-            try {
-                const result = await assignmentService.getMyAttempts(assignment.id);
-                if (result.success) {
-                    attempts[assignment.id] = result.attempts || [];
-                }
-            } catch (error) {
-                console.error(`Error loading attempts for assignment ${assignment.id}:`, error);
-                attempts[assignment.id] = [];
-            }
-        }
-        setAssignmentAttempts(attempts);
-    };
+    // ✅ ELIMINADO: loadAssignmentAttempts ya no necesario
+    // Los intentos ahora vienen incluidos en el batch response
 
     const handleStartAssignment = (assignment) => {
         navigate(`/evaluaciones/${assignment.id}/realizar`);

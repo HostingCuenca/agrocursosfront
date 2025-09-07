@@ -160,10 +160,10 @@ const CourseDetailPage = () => {
                         {error || 'El curso no existe o no tienes permisos para verlo'}
                     </p>
                     <button
-                        onClick={() => navigate('/cursos')}
+                        onClick={() => navigate('/explorar')}
                         className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg"
                     >
-                        Volver a Cursos
+                        Volver a Explorar
                     </button>
                 </div>
             </DashboardLayout>
@@ -176,11 +176,11 @@ const CourseDetailPage = () => {
                 {/* Navegación superior */}
                 <div className="flex items-center justify-between mb-6">
                     <button
-                        onClick={() => navigate('/cursos')}
+                        onClick={() => navigate('/explorar')}
                         className="flex items-center text-gray-600 hover:text-gray-800"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
-                        Volver a cursos
+                        Volver a explorar
                     </button>
 
                     {canManageThisCourse && (
