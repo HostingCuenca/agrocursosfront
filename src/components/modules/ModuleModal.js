@@ -68,8 +68,8 @@ const ModuleModal = ({ isOpen, onClose, module, courseId, onSave, loading }) => 
                 console.log('Calling UPDATE with ID:', module.id);
                 await onSave(module.id, payload);
             } else {
-                console.log('Calling CREATE for course:', courseId);
-                await onSave(courseId, payload);
+                console.log('Calling CREATE - no module ID, course:', courseId);
+                await onSave(null, payload);
             }
             console.log('Save successful');
         } catch (error) {

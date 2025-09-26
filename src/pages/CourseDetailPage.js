@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
     Clock, 
     Users, 
@@ -27,6 +27,7 @@ import useAuthStore from '../store/authStore';
 const CourseDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuthStore();
     const permissions = useRolePermissions();
     
@@ -43,7 +44,7 @@ const CourseDetailPage = () => {
     const [showEnrollModal, setShowEnrollModal] = useState(false);
     const [userEnrollment, setUserEnrollment] = useState(null);
     const [loadingEnrollment, setLoadingEnrollment] = useState(false);
-    const [activeTab, setActiveTab] = useState('content'); // 'content' or 'manage'
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'content'); // 'content' or 'manage'
 
     useEffect(() => {
         if (id) {
@@ -73,7 +74,26 @@ const CourseDetailPage = () => {
         }
     };
 
-    const canManageThisCourse = currentCourse && permissions.courses.canEdit(currentCourse.instructor_id);
+    const canManageThisCourse = currentCourse && (
+        permissions.isAdmin ||
+        (permissions.isInstructor && currentCourse.instructor_id === user?.id)
+    );
+
+    // Temporary debug logs
+    useEffect(() => {
+        if (currentCourse && user) {
+            console.log('🔍 PERMISSION DEBUG:');
+            console.log('- User role:', user.role);
+            console.log('- User ID:', user.id, typeof user.id);
+            console.log('- Course instructor_id:', currentCourse.instructor_id, typeof currentCourse.instructor_id);
+            console.log('- permissions.isAdmin:', permissions.isAdmin);
+            console.log('- permissions.isInstructor:', permissions.isInstructor);
+            console.log('- permissions.isStudent:', permissions.isStudent);
+            console.log('- IDs match:', currentCourse.instructor_id === user.id);
+            console.log('- canManageThisCourse:', canManageThisCourse);
+        }
+    }, [currentCourse, user, permissions, canManageThisCourse]);
+
 
     const handleRequestEnrollment = async () => {
         if (!permissions.courses.canEnroll) {
@@ -160,10 +180,10 @@ const CourseDetailPage = () => {
                         {error || 'El curso no existe o no tienes permisos para verlo'}
                     </p>
                     <button
-                        onClick={() => navigate('/explorar')}
+                        onClick={() => navigate('/cursos')}
                         className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg"
                     >
-                        Volver a Explorar
+                        Volver a Cursos
                     </button>
                 </div>
             </DashboardLayout>
@@ -176,26 +196,30 @@ const CourseDetailPage = () => {
                 {/* Navegación superior */}
                 <div className="flex items-center justify-between mb-6">
                     <button
-                        onClick={() => navigate('/explorar')}
+                        onClick={() => navigate('/cursos')}
                         className="flex items-center text-gray-600 hover:text-gray-800"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
-                        Volver a explorar
+                        Volver a cursos
                     </button>
 
-                    {canManageThisCourse && (
+                    {canManageThisCourse && activeTab !== 'manage' && (
                         <div className="flex space-x-2">
                             <button
                                 onClick={() => setActiveTab('manage')}
-                                className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-                                    activeTab === 'manage'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                }`}
+                                className="px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
                             >
                                 <Settings className="w-4 h-4" />
                                 <span>Gestionar Contenido</span>
                             </button>
+                        </div>
+                    )}
+                    {canManageThisCourse && activeTab === 'manage' && (
+                        <div className="flex space-x-2">
+                            <div className="px-4 py-2 rounded-lg bg-blue-600 text-white flex items-center space-x-2">
+                                <Settings className="w-4 h-4" />
+                                <span>Gestionando Contenido</span>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -359,6 +383,40 @@ const CourseDetailPage = () => {
                             {loadingEnrollment ? (
                                 <div className="w-full py-3 px-4 rounded-lg bg-gray-100 text-center mb-4">
                                     <span className="text-gray-600">Cargando estado...</span>
+                                </div>
+                            ) : canManageThisCourse ? (
+                                /* El instructor ve opciones contextuales según la pestaña activa */
+                                <div className="space-y-3 mb-4">
+                                    {activeTab === 'manage' ? (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                            <div className="text-2xl mb-2">⚙️</div>
+                                            <h4 className="font-semibold text-blue-800 mb-1">Modo Gestión</h4>
+                                            <p className="text-sm text-blue-600">
+                                                Estás gestionando el contenido de tu curso
+                                            </p>
+                                            <button
+                                                onClick={() => setActiveTab('content')}
+                                                className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium text-sm"
+                                            >
+                                                👁️ Vista Previa del Curso
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <button
+                                                onClick={() => setActiveTab('manage')}
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium"
+                                            >
+                                                ⚙️ Gestionar Contenido
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveTab('content')}
+                                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium text-sm"
+                                            >
+                                                🔄 Recargar Vista
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ) : !userEnrollment && permissions.courses.canEnroll ? (
                                 <button

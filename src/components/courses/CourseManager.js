@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye, Settings, Users, BookOpen } from 'lucide-react';
 import CourseModal from './CourseModal';
 import useCourseStore from '../../store/courseStore';
 import useAuthStore from '../../store/authStore';
 
 const CourseManager = () => {
+    const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -79,24 +81,56 @@ const CourseManager = () => {
         }
     };
 
+    const handleManageContent = (course) => {
+        // Navegar a la página de detalle del curso con la pestaña de gestión de contenido
+        navigate(`/cursos/${course.id}`, {
+            state: { activeTab: 'manage' }
+        });
+    };
+
     const handleCloseModal = () => {
         setShowModal(false);
         setSelectedCourse(null);
     };
+
+    // Debug logs
+    useEffect(() => {
+        console.log('🔍 CourseManager DEBUG:');
+        console.log('- User role:', user?.role);
+        console.log('- Total courses:', courses.length);
+        console.log('- Courses:', courses);
+    }, [courses, user]);
 
     // Filtrar cursos según búsqueda y categoría
     const filteredCourses = courses.filter(course => {
         const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             course.description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = !filterCategory || course.category === filterCategory;
-        
+
         // Si es instructor, solo mostrar sus cursos
         if (user?.role === 'instructor') {
             return matchesSearch && matchesCategory && course.instructor_id === user.id;
         }
-        
+
+        // Para estudiantes y admins, mostrar cursos publicados
+        if (user?.role === 'student') {
+            return matchesSearch && matchesCategory && course.is_published === true;
+        }
+
+        // Para admins, mostrar todos los cursos
         return matchesSearch && matchesCategory;
     });
+
+    // More debug logs
+    useEffect(() => {
+        console.log('🔍 Filter Results:');
+        console.log('- Filtered courses:', filteredCourses.length);
+        console.log('- Search term:', searchTerm);
+        console.log('- Category filter:', filterCategory);
+        filteredCourses.forEach((course, index) => {
+            console.log(`  [${index}] ${course.title} - Published: ${course.is_published}`);
+        });
+    }, [filteredCourses, searchTerm, filterCategory]);
 
     const categories = {
         'agriculture': 'Agricultura',
@@ -283,8 +317,9 @@ const CourseManager = () => {
                                     </button>
                                     
                                     <button
-                                        onClick={() => {/* TODO: Abrir gestión de contenido */}}
+                                        onClick={() => handleManageContent(course)}
                                         className="flex-1 flex items-center justify-center space-x-1 bg-yellow-100 text-yellow-700 px-3 py-2 rounded text-sm hover:bg-yellow-200 transition-colors"
+                                        title="Gestionar contenido del curso"
                                     >
                                         <Settings className="w-3 h-3" />
                                         <span>Contenido</span>
