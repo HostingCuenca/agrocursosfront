@@ -31,7 +31,7 @@ const InstructorDashboard = () => {
         { id: 'overview', label: 'Resumen', icon: BarChart3 },
         { id: 'courses', label: 'Mis Cursos', icon: BookOpen },
         { id: 'students', label: 'Estudiantes', icon: Users },
-        { id: 'analytics', label: 'Estadísticas', icon: TrendingUp }
+        // { id: 'analytics', label: 'Estadísticas', icon: TrendingUp } // Comentado: página no lista
     ];
 
     const renderOverview = () => (

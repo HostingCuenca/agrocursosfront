@@ -50,7 +50,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     { icon: Users, label: 'Mis Estudiantes', path: '/mis-estudiantes' },
                     { icon: UserPlus, label: 'Inscripciones', path: '/inscripciones' },
                     { icon: Award, label: 'Certificados', path: '/certificados' },
-                    { icon: BarChart3, label: 'Estadísticas', path: '/estadisticas' },
+                    // { icon: BarChart3, label: 'Estadísticas', path: '/estadisticas' }, // Comentado: página no lista
                     { icon: Settings, label: 'Configuración', path: '/configuracion' },
                 ];
             case 'student':
