@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Calendar, BookOpen, Star, Copy, ExternalLink, AlertCircle } from 'lucide-react';
+import { Award, Calendar, BookOpen, Star, Copy, ExternalLink, AlertCircle, User, Mail } from 'lucide-react';
 import CertificateDownloader from './CertificateDownloader';
 
 const CertificateCard = ({ 
@@ -100,6 +100,30 @@ const CertificateCard = ({
                         </div>
                     </div>
                 )}
+
+                {/* Información del estudiante */}
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                        <User className="w-4 h-4 mr-2 text-blue-600" />
+                        Estudiante Certificado
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div className="flex items-center text-blue-800">
+                            <User className="w-3 h-3 mr-2 text-blue-600" />
+                            <div>
+                                <span className="font-medium">Nombre:</span>
+                                <p className="font-semibold">{certificate.student_name || 'No disponible'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center text-blue-800">
+                            <Mail className="w-3 h-3 mr-2 text-blue-600" />
+                            <div>
+                                <span className="font-medium">Email:</span>
+                                <p className="font-mono text-xs">{certificate.student_email || 'No disponible'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Información del certificado */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
